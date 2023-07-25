@@ -12,4 +12,5 @@ func main() {
 		log.Fatalln(err)
 	}
 	<-prepared
+	
 }
