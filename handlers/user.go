@@ -9,8 +9,7 @@ const (
 	InvitationCode = "your_code"
 )
 
-func Register(w http.ResponseWriter, r *http.Request) {
-	printLog("/register", r)
+func register(w http.ResponseWriter, r *http.Request) {
 	var u user
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {

@@ -5,42 +5,42 @@ import (
 	"log"
 )
 
-var Users *scd.Table
-var RefreshTokens *scd.Table
-var Clients *scd.Table
+var UserTable *scd.Table
+var RefreshTokenTable *scd.Table
+var ClientTable *scd.Table
 
 func Init(prepared, done chan struct{}) error {
 	var err error
 
-	Users, err = scd.OpenTable("./users.csv")
+	UserTable, err = scd.OpenTable("./user.csv")
 	if err != nil {
 		return err
 	}
-	defer Users.Close()
+	defer UserTable.Close()
 	go func() {
-		if err := Users.ListenChange(); err != nil {
+		if err := UserTable.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()
 
-	RefreshTokens, err = scd.OpenTable("./refresh_tokens.csv")
+	ClientTable, err = scd.OpenTable("./client.csv")
 	if err != nil {
 		return err
 	}
-	defer RefreshTokens.Close()
+	defer ClientTable.Close()
 	go func() {
-		if err := RefreshTokens.ListenChange(); err != nil {
+		if err := ClientTable.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()
 
-	Clients, err = scd.OpenTable("./clients.csv")
+	RefreshTokenTable, err = scd.OpenTable("./refresh_token.csv")
 	if err != nil {
 		return err
 	}
-	defer Clients.Close()
+	defer RefreshTokenTable.Close()
 	go func() {
-		if err := Clients.ListenChange(); err != nil {
+		if err := RefreshTokenTable.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()

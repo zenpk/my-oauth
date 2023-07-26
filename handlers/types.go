@@ -3,12 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	printLog("/login", r)
+func login(w http.ResponseWriter, r *http.Request) {
+	printLog("/", r)
 	var u user
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
@@ -178,22 +178,4 @@ func TokenParse(w http.ResponseWriter, r *http.Request) {
 		},
 		claims.Data,
 	}, http.StatusOK)
-}
-
-func response(w http.ResponseWriter, data any, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	_ = json.NewEncoder(w).Encode(data)
-	log.Println(data)
-}
-
-func printLog(route string, r *http.Request) {
-	ipAddress := r.Header.Get("X-Real-Ip")
-	if ipAddress == "" {
-		ipAddress = r.Header.Get("X-Forwarded-For")
-	}
-	if ipAddress == "" {
-		ipAddress = r.RemoteAddr
-	}
-	log.Printf("%v %v\n", route, ipAddress)
 }
