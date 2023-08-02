@@ -24,7 +24,7 @@ type Client struct {
 	Id        string `json:"id"`
 	Secret    string `json:"secret"`
 	Redirects string `json:"redirects"`
-	Owner     string `json:""`
+	Owner     string `json:"owner"`
 }
 
 type RefreshToken struct {
