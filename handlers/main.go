@@ -2,16 +2,19 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/zenpk/my-oauth/utils"
 	"log"
 	"net/http"
 )
 
-func StartListening() {
+func StartListening() error {
 	mux := http.NewServeMux()
 	mux.Handle("/user/register", middlewares(register))
-	mux.Handle("/user/login", middlewares(login))
-	mux.Handle("/client/create")
-	mux.Handle("/client/")
+	//mux.Handle("/user/login", middlewares(login))
+	//mux.Handle("/client/create")
+	//mux.Handle("/client/")
+	log.Printf("start listening at %v\n", utils.HttpAddress)
+	return http.ListenAndServe(utils.HttpAddress, mux)
 }
 
 func middlewares(handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
@@ -68,6 +71,22 @@ func responseJson(w http.ResponseWriter, data any, statusCode int) {
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+}
+
+func responseError(w http.ResponseWriter, err error, statusCode int) {
+	data := commonResp{
+		Ok:  false,
+		Msg: err.Error(),
+	}
+	responseJson(w, data, statusCode)
+}
+
+func responseMethodUnsupported(w http.ResponseWriter) {
+	data := commonResp{
+		Ok:  false,
+		Msg: "HTTP method not supported",
+	}
+	responseJson(w, data, http.StatusBadRequest)
 }
 
 func responseNotFound(w http.ResponseWriter) {

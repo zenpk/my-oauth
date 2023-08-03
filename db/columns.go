@@ -10,14 +10,23 @@ const (
 	ClientRedirect = 2
 	ClientOwner    = 3
 
-	RefreshTokenToken      = 0
-	RefreshTokenExpireTime = 1
+	RefreshTokenClientId   = 0
+	RefreshTokenToken      = 1
+	RefreshTokenExpireTime = 2
 )
 
 type User struct {
 	Uuid     string `json:"uuid"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+func (u User) StructToRow(user User) []string {
+	row := make([]string, 3)
+	row[UserUuid] = user.Uuid
+	row[UserUsername] = u.Username
+	row[UserPassword] = u.Password
+	return row
 }
 
 type Client struct {
@@ -27,7 +36,25 @@ type Client struct {
 	Owner     string `json:"owner"`
 }
 
+func (c Client) StructToRow(client Client) []string {
+	row := make([]string, 4)
+	row[ClientId] = client.Id
+	row[ClientSecret] = client.Secret
+	row[ClientRedirect] = client.Redirects
+	row[ClientOwner] = client.Owner
+	return row
+}
+
 type RefreshToken struct {
+	ClientId   string `json:"clientId"`
 	Token      string `json:"string"`
 	ExpireTime string `json:"expireTime"` // UNIX ms
+}
+
+func (r RefreshToken) StructToRow(refreshToken RefreshToken) []string {
+	row := make([]string, 3)
+	row[RefreshTokenClientId] = refreshToken.ClientId
+	row[RefreshTokenToken] = refreshToken.Token
+	row[RefreshTokenExpireTime] = refreshToken.ExpireTime
+	return row
 }

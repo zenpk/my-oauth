@@ -12,7 +12,7 @@ var ClientTable *scd.Table
 func Init(prepared, done chan struct{}) error {
 	var err error
 
-	UserTable, err = scd.OpenTable("./user.csv")
+	UserTable, err = scd.OpenTable("./db/user.csv")
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func Init(prepared, done chan struct{}) error {
 		}
 	}()
 
-	ClientTable, err = scd.OpenTable("./client.csv")
+	ClientTable, err = scd.OpenTable("./db/client.csv")
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func Init(prepared, done chan struct{}) error {
 		}
 	}()
 
-	RefreshTokenTable, err = scd.OpenTable("./refresh_token.csv")
+	RefreshTokenTable, err = scd.OpenTable("./db/refresh_token.csv")
 	if err != nil {
 		return err
 	}

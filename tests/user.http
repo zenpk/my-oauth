@@ -1,0 +1,7 @@
+POST {{url}}/user/register?code=code
+Content-Type: application/json
+
+{
+  "username": "temp",
+  "password": "temp"
+}
