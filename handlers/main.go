@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/zenpk/my-oauth/utils"
 	"log"
 	"net/http"
@@ -9,16 +10,16 @@ import (
 
 func StartListening() error {
 	mux := http.NewServeMux()
-	mux.Handle("/user/register", middlewares(register))
-	//mux.Handle("/user/login", middlewares(login))
+	mux.Handle("/user/register", middlewares(http.MethodPost, register))
+	mux.Handle("/user/login", middlewares(http.MethodPost, login))
 	//mux.Handle("/client/create")
 	//mux.Handle("/client/")
-	log.Printf("start listening at %v\n", utils.HttpAddress)
-	return http.ListenAndServe(utils.HttpAddress, mux)
+	log.Printf("start listening at %v\n", utils.Conf.HttpAddress)
+	return http.ListenAndServe(utils.Conf.HttpAddress, mux)
 }
 
-func middlewares(handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
-	return logMiddleware(corsMiddleware(http.HandlerFunc(handler)))
+func middlewares(method string, handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
+	return logMiddleware(corsMiddleware(methodMiddleware(method, http.HandlerFunc(handler))))
 }
 
 type statusResponseWriter struct {
@@ -47,7 +48,7 @@ func logMiddleware(next http.Handler) http.Handler {
 		if ipAddress == "" {
 			ipAddress = r.RemoteAddr
 		}
-		log.Printf("%v|%-7s|%v|%v\n", sw.statusCode, r.Method, r.URL.Path, ipAddress)
+		log.Printf("| %v | %-7s | %v | %v\n", sw.statusCode, r.Method, r.URL.Path, ipAddress)
 	})
 }
 
@@ -59,6 +60,20 @@ func corsMiddleware(next http.Handler) http.Handler {
 			w.Header().Add("Access-Control-Allow-Credentials", "true")
 			w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func methodMiddleware(method string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			data := commonResp{
+				Ok:  false,
+				Msg: fmt.Sprintf("HTTP method %v is not supported", r.Method),
+			}
+			responseJson(w, data, http.StatusBadRequest)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -79,14 +94,6 @@ func responseError(w http.ResponseWriter, err error, statusCode int) {
 		Msg: err.Error(),
 	}
 	responseJson(w, data, statusCode)
-}
-
-func responseMethodUnsupported(w http.ResponseWriter) {
-	data := commonResp{
-		Ok:  false,
-		Msg: "HTTP method not supported",
-	}
-	responseJson(w, data, http.StatusBadRequest)
 }
 
 func responseNotFound(w http.ResponseWriter) {

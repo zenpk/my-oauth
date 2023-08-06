@@ -10,15 +10,14 @@ import (
 type Payload struct {
 	Uuid     string
 	Username string
-	ClientId string
 }
 
-func GenerateJwt(payload Payload) (string, error) {
+func GenerateJwt(payload Payload, clientId string, tokenAge time.Duration) (string, error) {
 	token, err := jwt.NewBuilder().
-		Audience([]string{payload.ClientId}).
+		Audience([]string{clientId}).
 		IssuedAt(time.Now()).
-		Issuer(Issuer).
-		Expiration(time.Now().Add(AccessTokenAge*time.Hour)).
+		Issuer(Conf.JwtIssuer).
+		Expiration(time.Now().Add(tokenAge*time.Hour)).
 		NotBefore(time.Now()).
 		Claim("uuid", payload.Uuid).
 		Claim("username", payload.Username).
@@ -26,12 +25,11 @@ func GenerateJwt(payload Payload) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	rawKey := []byte(JwtPrivateKey)
-	jwkKey, err := jwk.FromRaw(rawKey)
+	priKey, err := jwk.ParseKey([]byte(Conf.JwtPrivateKey))
 	if err != nil {
 		return "", err
 	}
-	serialized, err := jwt.Sign(token, jwt.WithKey(jwa.RS256, jwkKey))
+	serialized, err := jwt.Sign(token, jwt.WithKey(jwa.RS256, priKey))
 	if err != nil {
 		return "", err
 	}

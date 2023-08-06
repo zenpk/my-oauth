@@ -3,29 +3,24 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/utils"
-	"log"
 	"net/http"
 )
 
-type registerLoginReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
+type
 
-func register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		responseMethodUnsupported(w)
+func login(w http.ResponseWriter, r *http.Request) {
+	clientId := r.URL.Query().Get("clientId")
+	clientSecret := r.URL.Query().Get("clientSecret")
+	codeChallenge := r.URL.Query().Get("codeChallenge")
+	state := r.URL.Query().Get("state")
+	if clientId == "" || clientSecret == "" || codeChallenge == "" {
+		responseError(w, errors.New("some parameters are missing"), http.StatusOK)
 		return
 	}
-	if r.URL.Query().Get("code") != utils.InvitationCode {
-		responseError(w, errors.New("sorry, you need an invitation code or the code is wrong"), http.StatusOK)
-		return
-	}
-	var req registerLoginReq
+	var req registerReq
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		responseError(w, err, http.StatusBadRequest)
@@ -53,13 +48,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	token, err := utils.GenerateJwt(utils.Payload{
-		Uuid:     user.Uuid,
-		Username: user.Username,
-		ClientId: "",
-	})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Println(token)
+	responseJson(w, commonResp{
+		Ok:  true,
+		Msg: "ok",
+	}, http.StatusOK)
 }

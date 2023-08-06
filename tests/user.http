@@ -1,4 +1,4 @@
-POST {{url}}/user/register?code=code
+OPTIONS {{url}}/user/register?code=demo
 Content-Type: application/json
 
 {
