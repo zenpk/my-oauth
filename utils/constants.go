@@ -8,6 +8,7 @@ import (
 type Configuration struct {
 	HttpAddress             string
 	InvitationCode          string
+	AdminPassword           string
 	AuthorizationCodeLength int
 	JwtIssuer               string
 	JwtPrivateKey           string

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"log"
 	"strconv"
 )
 
@@ -11,15 +12,19 @@ const (
 
 	ClientId              = 0
 	ClientSecret          = 1
-	ClientRedirect        = 2
-	ClientOwner           = 3
-	ClientAccessTokenAge  = 4
-	ClientRefreshTokenAge = 5
+	ClientRedirects       = 2
+	ClientAccessTokenAge  = 3
+	ClientRefreshTokenAge = 4
 
 	RefreshTokenClientId   = 0
 	RefreshTokenToken      = 1
 	RefreshTokenExpireTime = 2
 )
+
+type Table interface {
+	ToRow() []string
+	FromRow(row []string)
+}
 
 type User struct {
 	Uuid     string `json:"uuid"`
@@ -27,32 +32,51 @@ type User struct {
 	Password string `json:"password"`
 }
 
-func (u User) StructToRow(user User) []string {
+func (u *User) ToRow() []string {
 	row := make([]string, 3)
-	row[UserUuid] = user.Uuid
+	row[UserUuid] = u.Uuid
 	row[UserUsername] = u.Username
 	row[UserPassword] = u.Password
 	return row
+}
+
+func (u *User) FromRow(row []string) {
+	u.Uuid = row[UserUuid]
+	u.Username = row[UserUsername]
+	u.Password = row[UserPassword]
 }
 
 type Client struct {
 	Id              string `json:"id"`
 	Secret          string `json:"secret"`
 	Redirects       string `json:"redirects"`
-	Owner           string `json:"owner"`
 	AccessTokenAge  int    `json:"accessTokenAge"`  // hour
 	RefreshTokenAge int    `json:"RefreshTokenAge"` // hour
 }
 
-func (c Client) StructToRow(client Client) []string {
+func (c *Client) ToRow() []string {
 	row := make([]string, 4)
-	row[ClientId] = client.Id
-	row[ClientSecret] = client.Secret
-	row[ClientRedirect] = client.Redirects
-	row[ClientOwner] = client.Owner
-	row[ClientAccessTokenAge] = strconv.Itoa(client.AccessTokenAge)
-	row[ClientRefreshTokenAge] = strconv.Itoa(client.RefreshTokenAge)
+	row[ClientId] = c.Id
+	row[ClientSecret] = c.Secret
+	row[ClientRedirects] = c.Redirects
+	row[ClientAccessTokenAge] = strconv.Itoa(c.AccessTokenAge)
+	row[ClientRefreshTokenAge] = strconv.Itoa(c.RefreshTokenAge)
 	return row
+}
+
+func (c *Client) FromRow(row []string) {
+	var err error
+	c.Id = row[ClientId]
+	c.Secret = row[ClientSecret]
+	c.Redirects = row[ClientRedirects]
+	c.AccessTokenAge, err = strconv.Atoi(row[ClientAccessTokenAge])
+	if err != nil {
+		log.Fatalln(err)
+	}
+	c.RefreshTokenAge, err = strconv.Atoi(row[ClientAccessTokenAge])
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 type RefreshToken struct {
@@ -61,10 +85,20 @@ type RefreshToken struct {
 	ExpireTime int64  `json:"expireTime"` // UNIX ms
 }
 
-func (r RefreshToken) StructToRow(refreshToken RefreshToken) []string {
+func (r *RefreshToken) ToRow() []string {
 	row := make([]string, 3)
-	row[RefreshTokenClientId] = refreshToken.ClientId
-	row[RefreshTokenToken] = refreshToken.Token
-	row[RefreshTokenExpireTime] = strconv.FormatInt(refreshToken.ExpireTime, 10)
+	row[RefreshTokenClientId] = r.ClientId
+	row[RefreshTokenToken] = r.Token
+	row[RefreshTokenExpireTime] = strconv.FormatInt(r.ExpireTime, 10)
 	return row
+}
+
+func (r *RefreshToken) FromRow(row []string) {
+	var err error
+	r.ClientId = row[RefreshTokenClientId]
+	r.Token = row[RefreshTokenToken]
+	r.ExpireTime, err = strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

@@ -5,42 +5,42 @@ import (
 	"log"
 )
 
-var UserTable *scd.Table
-var RefreshTokenTable *scd.Table
-var ClientTable *scd.Table
+var UserCsv *scd.Table
+var RefreshTokenCsv *scd.Table
+var ClientCsv *scd.Table
 
 func Init(prepared, done chan struct{}) error {
 	var err error
 
-	UserTable, err = scd.OpenTable("./db/user.csv")
+	UserCsv, err = scd.OpenTable("./db/user.csv")
 	if err != nil {
 		return err
 	}
-	defer UserTable.Close()
+	defer UserCsv.Close()
 	go func() {
-		if err := UserTable.ListenChange(); err != nil {
+		if err := UserCsv.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()
 
-	ClientTable, err = scd.OpenTable("./db/client.csv")
+	ClientCsv, err = scd.OpenTable("./db/client.csv")
 	if err != nil {
 		return err
 	}
-	defer ClientTable.Close()
+	defer ClientCsv.Close()
 	go func() {
-		if err := ClientTable.ListenChange(); err != nil {
+		if err := ClientCsv.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()
 
-	RefreshTokenTable, err = scd.OpenTable("./db/refresh_token.csv")
+	RefreshTokenCsv, err = scd.OpenTable("./db/refresh_token.csv")
 	if err != nil {
 		return err
 	}
-	defer RefreshTokenTable.Close()
+	defer RefreshTokenCsv.Close()
 	go func() {
-		if err := RefreshTokenTable.ListenChange(); err != nil {
+		if err := RefreshTokenCsv.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()

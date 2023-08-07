@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/zenpk/my-oauth/utils"
 	"log"
@@ -78,24 +77,4 @@ func methodMiddleware(method string, next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func responseJson(w http.ResponseWriter, data any, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
-func responseError(w http.ResponseWriter, err error, statusCode int) {
-	data := commonResp{
-		Ok:  false,
-		Msg: err.Error(),
-	}
-	responseJson(w, data, statusCode)
-}
-
-func responseNotFound(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
 }

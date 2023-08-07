@@ -20,18 +20,22 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req registerReq
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseError(w, err, http.StatusBadRequest)
 		return
 	}
-	res, err := db.UserTable.Select(db.UserUsername, req.Username)
+	if req.Username == "" || req.Password == "" {
+		responseInputError(w)
+		return
+	}
+	res, err := db.UserCsv.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
 	if len(res) > 0 {
-		responseError(w, errors.New("user already exists"), http.StatusBadRequest)
+		responseError(w, errors.New("user already exists"), http.StatusOK)
+		return
 	}
 	passwordHash, err := utils.BCryptPassword(req.Password)
 	if err != nil {
@@ -43,12 +47,102 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Username: req.Username,
 		Password: passwordHash,
 	}
-	if err := db.UserTable.Insert(user.StructToRow(user)); err != nil {
+	if err := db.UserCsv.Insert(user.ToRow()); err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	responseJson(w, commonResp{
-		Ok:  true,
-		Msg: "ok",
+	responseOk(w)
+}
+
+type clientListResp struct {
+	commonResp
+	Clients []db.Client `json:"clients"`
+}
+
+func clientList(w http.ResponseWriter, r *http.Request) {
+	clients := make([]db.Client, 0)
+	for _, row := range db.ClientCsv.Records {
+		var client db.Client
+		client.FromRow(row)
+		clients = append(clients, client)
+	}
+	responseJson(w, clientListResp{
+		commonResp: commonResp{
+			Ok:  true,
+			Msg: "ok",
+		},
+		Clients: clients,
 	}, http.StatusOK)
+}
+
+type clientCreateReq struct {
+	db.Client
+	AdminPassword string `json:"adminPassword"`
+}
+
+func clientCreate(w http.ResponseWriter, r *http.Request) {
+	var req clientCreateReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		responseError(w, err, http.StatusBadRequest)
+		return
+	}
+	if req.Id == "" || req.Secret == "" || req.Redirects == "" || req.AccessTokenAge <= 0 || req.RefreshTokenAge <= 0 || req.AdminPassword == "" {
+		responseInputError(w)
+		return
+	}
+	if req.RefreshTokenAge <= req.AccessTokenAge {
+		responseError(w, errors.New("refresh_token age should be longer than access_token age"), http.StatusOK)
+		return
+	}
+	passwordMatch, err := utils.BCryptHashCheck(utils.Conf.AdminPassword, req.AdminPassword)
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if !passwordMatch {
+		responseError(w, errors.New("incorrect admin password"), http.StatusOK)
+		return
+	}
+	hashedSecret, err := utils.BCryptPassword(req.Secret)
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	req.Secret = hashedSecret
+	if err := db.ClientCsv.Insert(req.Client.ToRow()); err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	responseOk(w)
+}
+
+type clientDeleteReq struct {
+	ClientId      string `json:"clientId"`
+	AdminPassword string `json:"adminPassword"`
+}
+
+func clientDelete(w http.ResponseWriter, r *http.Request) {
+	var req clientDeleteReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		responseError(w, err, http.StatusBadRequest)
+		return
+	}
+	if req.ClientId == "" || req.AdminPassword == "" {
+		responseInputError(w)
+		return
+	}
+	passwordMatch, err := utils.BCryptHashCheck(utils.Conf.AdminPassword, req.AdminPassword)
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if !passwordMatch {
+		responseError(w, errors.New("incorrect admin password"), http.StatusOK)
+		return
+	}
+	if err := db.ClientCsv.Delete(db.ClientId, req.ClientId); err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	responseOk(w)
 }

@@ -1,6 +1,7 @@
 {
   "HttpAddress": "0.0.0.0:20476",
   "InvitationCode": "demo",
+  "AdminPassword": "$2a$12$nA.Br7mc//sjemVPW85q/eq5JT8d3Z42LkB18lb7.0M05fp3Pjj6m",
   "AuthorizationCodeLength": 128,
   "JwtIssuer": "demo",
   "JwtPrivateKey": {

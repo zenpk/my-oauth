@@ -3,53 +3,70 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/utils"
 	"net/http"
 )
 
-type
+type loginReq struct {
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	ClientId      string `json:"clientId"`
+	ClientSecret  string `json:"clientSecret"`
+	CodeChallenge string `json:"codeChallenge"`
+	RedirectUri   string `json:"redirectUri"`
+}
+
+type loginResp struct {
+	commonResp
+	AuthorizationCode string `json:"authorizationCode"`
+}
 
 func login(w http.ResponseWriter, r *http.Request) {
-	clientId := r.URL.Query().Get("clientId")
-	clientSecret := r.URL.Query().Get("clientSecret")
-	codeChallenge := r.URL.Query().Get("codeChallenge")
-	state := r.URL.Query().Get("state")
-	if clientId == "" || clientSecret == "" || codeChallenge == "" {
-		responseError(w, errors.New("some parameters are missing"), http.StatusOK)
-		return
-	}
-	var req registerReq
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
+	var req loginReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseError(w, err, http.StatusBadRequest)
 		return
 	}
-	res, err := db.UserTable.Select(db.UserUsername, req.Username)
+	if req.ClientId == "" || req.ClientSecret == "" || req.CodeChallenge == "" {
+		responseInputError(w)
+		return
+	}
+	clientRow, err := db.ClientCsv.Select(db.ClientId, req.ClientId)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	if len(res) > 0 {
-		responseError(w, errors.New("user already exists"), http.StatusBadRequest)
+	if len(clientRow) <= 0 {
+		responseError(w, errors.New("client id doesn't exist"), http.StatusOK)
+		return
 	}
-	passwordHash, err := utils.BCryptPassword(req.Password)
+	userRow, err := db.UserCsv.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	user := db.User{
-		Uuid:     uuid.New().String(),
-		Username: req.Username,
-		Password: passwordHash,
+	if len(userRow) <= 0 {
+		responseError(w, errors.New("username doesn't exist"), http.StatusOK)
+		return
 	}
-	if err := db.UserTable.Insert(user.StructToRow(user)); err != nil {
+	secretMatch, err := utils.BCryptHashCheck(clientRow[db.ClientSecret], req.ClientSecret)
+	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	responseJson(w, commonResp{
-		Ok:  true,
-		Msg: "ok",
-	}, http.StatusOK)
+	if !secretMatch {
+		responseError(w, errors.New("incorrect client secret"), http.StatusOK)
+		return
+	}
+	passwordMatch, err := utils.BCryptHashCheck(userRow[db.UserPassword], req.Password)
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if !passwordMatch {
+		responseError(w, errors.New("incorrect password"), http.StatusOK)
+		return
+	}
+
 }
