@@ -35,7 +35,7 @@ func (u User) ToRow() ([]string, error) {
 	return row, nil
 }
 
-func (u User) FromRow(row []string) (scd.Table, error) {
+func (u User) FromRow(row []string) (scd.RecordType, error) {
 	return User{
 		Uuid:     row[UserUuid],
 		Username: row[UserUsername],
@@ -61,7 +61,7 @@ func (c Client) ToRow() ([]string, error) {
 	return row, nil
 }
 
-func (c Client) FromRow(row []string) (scd.Table, error) {
+func (c Client) FromRow(row []string) (scd.RecordType, error) {
 	var err error
 	var newClient Client
 	newClient.Id = row[ClientId]
@@ -92,7 +92,7 @@ func (r RefreshToken) ToRow() ([]string, error) {
 	return row, nil
 }
 
-func (r RefreshToken) FromRow(row []string) (scd.Table, error) {
+func (r RefreshToken) FromRow(row []string) (scd.RecordType, error) {
 	var err error
 	var newRefreshToken RefreshToken
 	newRefreshToken.ClientId = row[RefreshTokenClientId]

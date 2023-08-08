@@ -5,42 +5,42 @@ import (
 	"log"
 )
 
-var UserCsv *scd.Csv
-var RefreshTokenCsv *scd.Csv
-var ClientCsv *scd.Csv
+var TableUser *scd.Table
+var TableRefreshToken *scd.Table
+var TableClient *scd.Table
 
 func Init(prepared, done chan struct{}) error {
 	var err error
 
-	UserCsv, err = scd.OpenCsv("./db/user.csv", User{})
+	TableUser, err = scd.OpenTable("./db/user.csv", User{})
 	if err != nil {
 		return err
 	}
-	defer UserCsv.Close()
+	defer TableUser.Close()
 	go func() {
-		if err := UserCsv.ListenChange(); err != nil {
+		if err := TableUser.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()
 
-	ClientCsv, err = scd.OpenCsv("./db/client.csv", Client{})
+	TableClient, err = scd.OpenTable("./db/client.csv", Client{})
 	if err != nil {
 		return err
 	}
-	defer ClientCsv.Close()
+	defer TableClient.Close()
 	go func() {
-		if err := ClientCsv.ListenChange(); err != nil {
+		if err := TableClient.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()
 
-	RefreshTokenCsv, err = scd.OpenCsv("./db/refresh_token.csv", RefreshToken{})
+	TableRefreshToken, err = scd.OpenTable("./db/refresh_token.csv", RefreshToken{})
 	if err != nil {
 		return err
 	}
-	defer RefreshTokenCsv.Close()
+	defer TableRefreshToken.Close()
 	go func() {
-		if err := RefreshTokenCsv.ListenChange(); err != nil {
+		if err := TableRefreshToken.ListenChange(); err != nil {
 			log.Fatalln(err)
 		}
 	}()

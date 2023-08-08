@@ -28,7 +28,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	res, err := db.UserCsv.Select(db.UserUsername, req.Username)
+	res, err := db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
@@ -47,7 +47,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Username: req.Username,
 		Password: passwordHash,
 	}
-	if err := db.UserCsv.Insert(user); err != nil {
+	if err := db.TableUser.Insert(user); err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -60,7 +60,7 @@ type clientListResp struct {
 }
 
 func clientList(w http.ResponseWriter, r *http.Request) {
-	clients, err := db.ClientCsv.All()
+	clients, err := db.TableClient.All()
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
@@ -113,7 +113,7 @@ func clientCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Secret = hashedSecret
-	if err := db.ClientCsv.Insert(req.Client); err != nil {
+	if err := db.TableClient.Insert(req.Client); err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -144,7 +144,7 @@ func clientDelete(w http.ResponseWriter, r *http.Request) {
 		responseError(w, errors.New("incorrect admin password"), http.StatusOK)
 		return
 	}
-	if err := db.ClientCsv.Delete(db.ClientId, req.ClientId); err != nil {
+	if err := db.TableClient.Delete(db.ClientId, req.ClientId); err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}

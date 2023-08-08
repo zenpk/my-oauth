@@ -32,7 +32,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	client, err := db.ClientCsv.Select(db.ClientId, req.ClientId)
+	client, err := db.TableClient.Select(db.ClientId, req.ClientId)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
@@ -41,7 +41,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseError(w, errors.New("client id doesn't exist"), http.StatusOK)
 		return
 	}
-	user, err := db.UserCsv.Select(db.UserUsername, req.Username)
+	user, err := db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
