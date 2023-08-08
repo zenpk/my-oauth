@@ -5,14 +5,14 @@ import (
 	"log"
 )
 
-var UserCsv *scd.Table
-var RefreshTokenCsv *scd.Table
-var ClientCsv *scd.Table
+var UserCsv *scd.Csv
+var RefreshTokenCsv *scd.Csv
+var ClientCsv *scd.Csv
 
 func Init(prepared, done chan struct{}) error {
 	var err error
 
-	UserCsv, err = scd.OpenTable("./db/user.csv")
+	UserCsv, err = scd.OpenCsv("./db/user.csv", User{})
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func Init(prepared, done chan struct{}) error {
 		}
 	}()
 
-	ClientCsv, err = scd.OpenTable("./db/client.csv")
+	ClientCsv, err = scd.OpenCsv("./db/client.csv", Client{})
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func Init(prepared, done chan struct{}) error {
 		}
 	}()
 
-	RefreshTokenCsv, err = scd.OpenTable("./db/refresh_token.csv")
+	RefreshTokenCsv, err = scd.OpenCsv("./db/refresh_token.csv", RefreshToken{})
 	if err != nil {
 		return err
 	}

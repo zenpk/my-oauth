@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	scd "github.com/zenpk/safe-csv-db"
 	"strconv"
 )
 
@@ -21,29 +21,26 @@ const (
 	RefreshTokenExpireTime = 2
 )
 
-type Table interface {
-	ToRow() []string
-	FromRow(row []string)
-}
-
 type User struct {
 	Uuid     string `json:"uuid"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-func (u *User) ToRow() []string {
+func (u User) ToRow() ([]string, error) {
 	row := make([]string, 3)
 	row[UserUuid] = u.Uuid
 	row[UserUsername] = u.Username
 	row[UserPassword] = u.Password
-	return row
+	return row, nil
 }
 
-func (u *User) FromRow(row []string) {
-	u.Uuid = row[UserUuid]
-	u.Username = row[UserUsername]
-	u.Password = row[UserPassword]
+func (u User) FromRow(row []string) (scd.Table, error) {
+	return User{
+		Uuid:     row[UserUuid],
+		Username: row[UserUsername],
+		Password: row[UserPassword],
+	}, nil
 }
 
 type Client struct {
@@ -54,29 +51,31 @@ type Client struct {
 	RefreshTokenAge int    `json:"RefreshTokenAge"` // hour
 }
 
-func (c *Client) ToRow() []string {
+func (c Client) ToRow() ([]string, error) {
 	row := make([]string, 4)
 	row[ClientId] = c.Id
 	row[ClientSecret] = c.Secret
 	row[ClientRedirects] = c.Redirects
 	row[ClientAccessTokenAge] = strconv.Itoa(c.AccessTokenAge)
 	row[ClientRefreshTokenAge] = strconv.Itoa(c.RefreshTokenAge)
-	return row
+	return row, nil
 }
 
-func (c *Client) FromRow(row []string) {
+func (c Client) FromRow(row []string) (scd.Table, error) {
 	var err error
-	c.Id = row[ClientId]
-	c.Secret = row[ClientSecret]
-	c.Redirects = row[ClientRedirects]
-	c.AccessTokenAge, err = strconv.Atoi(row[ClientAccessTokenAge])
+	var newClient Client
+	newClient.Id = row[ClientId]
+	newClient.Secret = row[ClientSecret]
+	newClient.Redirects = row[ClientRedirects]
+	newClient.AccessTokenAge, err = strconv.Atoi(row[ClientAccessTokenAge])
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
-	c.RefreshTokenAge, err = strconv.Atoi(row[ClientAccessTokenAge])
+	newClient.RefreshTokenAge, err = strconv.Atoi(row[ClientAccessTokenAge])
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
+	return newClient, nil
 }
 
 type RefreshToken struct {
@@ -85,20 +84,22 @@ type RefreshToken struct {
 	ExpireTime int64  `json:"expireTime"` // UNIX ms
 }
 
-func (r *RefreshToken) ToRow() []string {
+func (r RefreshToken) ToRow() ([]string, error) {
 	row := make([]string, 3)
 	row[RefreshTokenClientId] = r.ClientId
 	row[RefreshTokenToken] = r.Token
 	row[RefreshTokenExpireTime] = strconv.FormatInt(r.ExpireTime, 10)
-	return row
+	return row, nil
 }
 
-func (r *RefreshToken) FromRow(row []string) {
+func (r RefreshToken) FromRow(row []string) (scd.Table, error) {
 	var err error
-	r.ClientId = row[RefreshTokenClientId]
-	r.Token = row[RefreshTokenToken]
-	r.ExpireTime, err = strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
+	var newRefreshToken RefreshToken
+	newRefreshToken.ClientId = row[RefreshTokenClientId]
+	newRefreshToken.Token = row[RefreshTokenToken]
+	newRefreshToken.ExpireTime, err = strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
+	return newRefreshToken, nil
 }

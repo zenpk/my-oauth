@@ -32,25 +32,25 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	clientRow, err := db.ClientCsv.Select(db.ClientId, req.ClientId)
+	client, err := db.ClientCsv.Select(db.ClientId, req.ClientId)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	if len(clientRow) <= 0 {
+	if client == nil {
 		responseError(w, errors.New("client id doesn't exist"), http.StatusOK)
 		return
 	}
-	userRow, err := db.UserCsv.Select(db.UserUsername, req.Username)
+	user, err := db.UserCsv.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	if len(userRow) <= 0 {
+	if user == nil {
 		responseError(w, errors.New("username doesn't exist"), http.StatusOK)
 		return
 	}
-	secretMatch, err := utils.BCryptHashCheck(clientRow[db.ClientSecret], req.ClientSecret)
+	secretMatch, err := utils.BCryptHashCheck(client.(db.Client).Secret, req.ClientSecret)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
@@ -59,7 +59,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseError(w, errors.New("incorrect client secret"), http.StatusOK)
 		return
 	}
-	passwordMatch, err := utils.BCryptHashCheck(userRow[db.UserPassword], req.Password)
+	passwordMatch, err := utils.BCryptHashCheck(user.(db.User).Password, req.Password)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
@@ -68,5 +68,5 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseError(w, errors.New("incorrect password"), http.StatusOK)
 		return
 	}
-
+	//
 }

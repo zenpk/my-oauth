@@ -33,7 +33,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
-	if len(res) > 0 {
+	if res != nil {
 		responseError(w, errors.New("user already exists"), http.StatusOK)
 		return
 	}
@@ -47,7 +47,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Username: req.Username,
 		Password: passwordHash,
 	}
-	if err := db.UserCsv.Insert(user.ToRow()); err != nil {
+	if err := db.UserCsv.Insert(user); err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -60,18 +60,22 @@ type clientListResp struct {
 }
 
 func clientList(w http.ResponseWriter, r *http.Request) {
-	clients := make([]db.Client, 0)
-	for _, row := range db.ClientCsv.Records {
-		var client db.Client
-		client.FromRow(row)
-		clients = append(clients, client)
+	clients, err := db.ClientCsv.All()
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	clientsConverted := make([]db.Client, 0)
+	for _, client := range clients {
+		converted := client.(db.Client)
+		clientsConverted = append(clientsConverted, converted)
 	}
 	responseJson(w, clientListResp{
 		commonResp: commonResp{
 			Ok:  true,
 			Msg: "ok",
 		},
-		Clients: clients,
+		Clients: clientsConverted,
 	}, http.StatusOK)
 }
 
@@ -109,7 +113,7 @@ func clientCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Secret = hashedSecret
-	if err := db.ClientCsv.Insert(req.Client.ToRow()); err != nil {
+	if err := db.ClientCsv.Insert(req.Client); err != nil {
 		responseError(w, err, http.StatusInternalServerError)
 		return
 	}
