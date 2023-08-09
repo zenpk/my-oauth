@@ -139,4 +139,9 @@ func authorize(w http.ResponseWriter, r *http.Request) {
 		responseMsg(w, "incorrect client secret")
 		return
 	}
+	if err := utils.VerifyAuthorizationCode(req.AuthorizationCode, req.CodeVerifier); err != nil {
+		responseMsg(w, err.Error())
+		return
+	}
+	// generate token
 }

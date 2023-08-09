@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 )
 
 type AuthorizationInfo struct {
@@ -22,12 +23,17 @@ func GenAuthorizationCode(info AuthorizationInfo) (string, error) {
 	return code, nil
 }
 
-func VerifyAuthorizationCode(code string, codeVerifier string) bool {
+func VerifyAuthorizationCode(code string, codeVerifier string) error {
 	info, ok := AuthorizationCodeMap[code]
 	if !ok {
-		return false
+		return errors.New("invalid authorization code")
 	}
 	checksum := sha256.Sum256([]byte(codeVerifier))
 	// use base64.RawURLEncoding to omit padding
-	return base64.RawURLEncoding.EncodeToString(checksum[:]) == info.CodeChallenge
+	match := base64.RawURLEncoding.EncodeToString(checksum[:]) == info.CodeChallenge
+	if !match {
+		return errors.New("code challenge failed")
+	}
+	delete(AuthorizationCodeMap, code) // one-time usage
+	return nil
 }

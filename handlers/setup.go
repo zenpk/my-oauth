@@ -15,7 +15,7 @@ type registerReq struct {
 
 func register(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("code") != utils.Conf.InvitationCode {
-		responseMsg(w, "sorry, you need an invitation code or the code is wrong")
+		responseMsg(w, "sorry, you need an invitation code or the code is incorrect")
 		return
 	}
 	var req registerReq
