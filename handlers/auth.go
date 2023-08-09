@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/utils"
 	"net/http"
@@ -26,47 +25,47 @@ type loginResp struct {
 func login(w http.ResponseWriter, r *http.Request) {
 	var req loginReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		responseError(w, err, http.StatusBadRequest)
+		responseInputError(w, err)
 		return
 	}
-	if req.ClientId == "" || req.ClientSecret == "" || req.CodeChallenge == "" {
+	if req.Username == "" || req.Password == "" || req.ClientId == "" || req.ClientSecret == "" || req.CodeChallenge == "" || req.RedirectUri == "" {
 		responseInputError(w)
 		return
 	}
 	client, err := db.TableClient.Select(db.ClientId, req.ClientId)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	if client == nil {
-		responseError(w, errors.New("client id doesn't exist"), http.StatusOK)
+		responseMsg(w, "client id doesn't exist")
 		return
 	}
 	secretMatch, err := utils.BCryptHashCheck(client.(db.Client).Secret, req.ClientSecret)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	if !secretMatch {
-		responseError(w, errors.New("incorrect client secret"), http.StatusOK)
+		responseMsg(w, "incorrect client secret")
 		return
 	}
 	user, err := db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	if user == nil {
-		responseError(w, errors.New("username doesn't exist"), http.StatusOK)
+		responseMsg(w, "username doesn't exist")
 		return
 	}
 	passwordMatch, err := utils.BCryptHashCheck(user.(db.User).Password, req.Password)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	if !passwordMatch {
-		responseError(w, errors.New("incorrect password"), http.StatusOK)
+		responseMsg(w, "incorrect password")
 		return
 	}
 	redirects := strings.Split(client.(db.Client).Redirects, ",")
@@ -78,7 +77,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !redirectValid {
-		responseError(w, errors.New("invalid redirect uri"), http.StatusOK)
+		responseMsg(w, "invalid redirect uri")
 		return
 	}
 	authorizationCode, err := utils.GenAuthorizationCode(utils.AuthorizationInfo{
@@ -87,7 +86,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		CodeChallenge: req.CodeChallenge,
 	})
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	responseJson(w, loginResp{
@@ -96,9 +95,48 @@ func login(w http.ResponseWriter, r *http.Request) {
 			Msg: "ok",
 		},
 		AuthorizationCode: authorizationCode,
-	}, http.StatusOK)
+	})
+}
+
+type authorizeReq struct {
+	ClientId          string `json:"clientId"`
+	ClientSecret      string `json:"clientSecret"`
+	AuthorizationCode string `json:"authorizationCode"`
+	CodeVerifier      string `json:"codeVerifier"`
+}
+
+type tokenResp struct {
+	commonResp
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 func authorize(w http.ResponseWriter, r *http.Request) {
-
+	var req authorizeReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		responseInputError(w, err)
+		return
+	}
+	if req.ClientId == "" || req.ClientSecret == "" || req.AuthorizationCode == "" || req.CodeVerifier == "" {
+		responseInputError(w)
+		return
+	}
+	client, err := db.TableClient.Select(db.ClientId, req.ClientId)
+	if err != nil {
+		responseError(w, err)
+		return
+	}
+	if client == nil {
+		responseMsg(w, "client id doesn't exist")
+		return
+	}
+	secretMatch, err := utils.BCryptHashCheck(client.(db.Client).Secret, req.ClientSecret)
+	if err != nil {
+		responseError(w, err)
+		return
+	}
+	if !secretMatch {
+		responseMsg(w, "incorrect client secret")
+		return
+	}
 }

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/google/uuid"
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/utils"
@@ -16,12 +15,12 @@ type registerReq struct {
 
 func register(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("code") != utils.Conf.InvitationCode {
-		responseError(w, errors.New("sorry, you need an invitation code or the code is wrong"), http.StatusOK)
+		responseMsg(w, "sorry, you need an invitation code or the code is wrong")
 		return
 	}
 	var req registerReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		responseError(w, err, http.StatusBadRequest)
+		responseInputError(w, err)
 		return
 	}
 	if req.Username == "" || req.Password == "" {
@@ -30,16 +29,16 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 	res, err := db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	if res != nil {
-		responseError(w, errors.New("user already exists"), http.StatusOK)
+		responseMsg(w, "user already exists")
 		return
 	}
 	passwordHash, err := utils.BCryptPassword(req.Password)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	user := db.User{
@@ -48,7 +47,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Password: passwordHash,
 	}
 	if err := db.TableUser.Insert(user); err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	responseOk(w)
@@ -62,7 +61,7 @@ type clientListResp struct {
 func clientList(w http.ResponseWriter, r *http.Request) {
 	clients, err := db.TableClient.All()
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	clientsConverted := make([]db.Client, 0)
@@ -76,7 +75,7 @@ func clientList(w http.ResponseWriter, r *http.Request) {
 			Msg: "ok",
 		},
 		Clients: clientsConverted,
-	}, http.StatusOK)
+	})
 }
 
 type clientCreateReq struct {
@@ -87,7 +86,7 @@ type clientCreateReq struct {
 func clientCreate(w http.ResponseWriter, r *http.Request) {
 	var req clientCreateReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		responseError(w, err, http.StatusBadRequest)
+		responseInputError(w, err)
 		return
 	}
 	if req.Id == "" || req.Secret == "" || req.Redirects == "" || req.AccessTokenAge <= 0 || req.RefreshTokenAge <= 0 || req.AdminPassword == "" {
@@ -95,26 +94,26 @@ func clientCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.RefreshTokenAge <= req.AccessTokenAge {
-		responseError(w, errors.New("refresh_token age should be longer than access_token age"), http.StatusOK)
+		responseMsg(w, "refresh_token age should be longer than access_token age")
 		return
 	}
 	passwordMatch, err := utils.BCryptHashCheck(utils.Conf.AdminPassword, req.AdminPassword)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	if !passwordMatch {
-		responseError(w, errors.New("incorrect admin password"), http.StatusOK)
+		responseMsg(w, "incorrect admin password")
 		return
 	}
 	hashedSecret, err := utils.BCryptPassword(req.Secret)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	req.Secret = hashedSecret
 	if err := db.TableClient.Insert(req.Client); err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	responseOk(w)
@@ -128,7 +127,7 @@ type clientDeleteReq struct {
 func clientDelete(w http.ResponseWriter, r *http.Request) {
 	var req clientDeleteReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		responseError(w, err, http.StatusBadRequest)
+		responseInputError(w, err)
 		return
 	}
 	if req.ClientId == "" || req.AdminPassword == "" {
@@ -137,15 +136,15 @@ func clientDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	passwordMatch, err := utils.BCryptHashCheck(utils.Conf.AdminPassword, req.AdminPassword)
 	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	if !passwordMatch {
-		responseError(w, errors.New("incorrect admin password"), http.StatusOK)
+		responseMsg(w, "incorrect admin password")
 		return
 	}
 	if err := db.TableClient.Delete(db.ClientId, req.ClientId); err != nil {
-		responseError(w, err, http.StatusInternalServerError)
+		responseError(w, err)
 		return
 	}
 	responseOk(w)

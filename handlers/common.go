@@ -10,31 +10,50 @@ type commonResp struct {
 	Msg string `json:"msg"`
 }
 
-func responseJson(w http.ResponseWriter, data any, statusCode int) {
+func responseJson(w http.ResponseWriter, data any, statusCodes ...int) {
+	code := http.StatusOK
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
+	if len(statusCodes) > 0 {
+		code = statusCodes[0]
+	}
+	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-}
-
-func responseError(w http.ResponseWriter, err error, statusCode int) {
-	responseJson(w, commonResp{
-		Ok:  false,
-		Msg: err.Error(),
-	}, statusCode)
-}
-
-func responseInputError(w http.ResponseWriter) {
-	responseJson(w, commonResp{
-		Ok:  false,
-		Msg: "input error",
-	}, http.StatusOK)
 }
 
 func responseOk(w http.ResponseWriter) {
 	responseJson(w, commonResp{
 		Ok:  true,
 		Msg: "ok",
-	}, http.StatusOK)
+	})
+}
+
+func responseMsg(w http.ResponseWriter, msg string) {
+	responseJson(w, commonResp{
+		Ok:  true,
+		Msg: msg,
+	})
+}
+
+func responseInputError(w http.ResponseWriter, errs ...error) {
+	msg := "input error"
+	if len(errs) > 0 {
+		msg = errs[0].Error()
+	}
+	responseJson(w, commonResp{
+		Ok:  false,
+		Msg: msg,
+	}, http.StatusBadRequest)
+}
+
+func responseError(w http.ResponseWriter, err error, statusCodes ...int) {
+	code := http.StatusInternalServerError
+	if len(statusCodes) > 0 {
+		code = statusCodes[0]
+	}
+	responseJson(w, commonResp{
+		Ok:  false,
+		Msg: err.Error(),
+	}, code)
 }
