@@ -16,9 +16,10 @@ const (
 	ClientAccessTokenAge  = 3
 	ClientRefreshTokenAge = 4
 
-	RefreshTokenClientId   = 0
-	RefreshTokenToken      = 1
-	RefreshTokenExpireTime = 2
+	RefreshTokenToken      = 0
+	RefreshTokenClientId   = 1
+	RefreshTokenUuid       = 2
+	RefreshTokenExpireTime = 3
 )
 
 type User struct {
@@ -79,15 +80,17 @@ func (c Client) FromRow(row []string) (scd.RecordType, error) {
 }
 
 type RefreshToken struct {
-	ClientId   string `json:"clientId"`
 	Token      string `json:"string"`
+	ClientId   string `json:"clientId"`
+	Uuid       string `json:"uuid"`
 	ExpireTime int64  `json:"expireTime"` // UNIX ms
 }
 
 func (r RefreshToken) ToRow() ([]string, error) {
 	row := make([]string, 3)
-	row[RefreshTokenClientId] = r.ClientId
 	row[RefreshTokenToken] = r.Token
+	row[RefreshTokenClientId] = r.ClientId
+	row[RefreshTokenUuid] = r.Uuid
 	row[RefreshTokenExpireTime] = strconv.FormatInt(r.ExpireTime, 10)
 	return row, nil
 }
@@ -95,8 +98,9 @@ func (r RefreshToken) ToRow() ([]string, error) {
 func (r RefreshToken) FromRow(row []string) (scd.RecordType, error) {
 	var err error
 	var newRefreshToken RefreshToken
-	newRefreshToken.ClientId = row[RefreshTokenClientId]
 	newRefreshToken.Token = row[RefreshTokenToken]
+	newRefreshToken.ClientId = row[RefreshTokenClientId]
+	newRefreshToken.Uuid = row[RefreshTokenUuid]
 	newRefreshToken.ExpireTime, err = strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
 	if err != nil {
 		return nil, err

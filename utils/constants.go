@@ -26,5 +26,8 @@ func Init(mode string) error {
 	if err := json.Unmarshal(confJson, &Conf); err != nil {
 		return err
 	}
+
+	AuthorizationCodeMap = make(map[string]AuthorizationInfo, 0)
+
 	return nil
 }

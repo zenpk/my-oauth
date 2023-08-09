@@ -6,6 +6,7 @@ import (
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/utils"
 	"net/http"
+	"strings"
 )
 
 type loginReq struct {
@@ -41,15 +42,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseError(w, errors.New("client id doesn't exist"), http.StatusOK)
 		return
 	}
-	user, err := db.TableUser.Select(db.UserUsername, req.Username)
-	if err != nil {
-		responseError(w, err, http.StatusInternalServerError)
-		return
-	}
-	if user == nil {
-		responseError(w, errors.New("username doesn't exist"), http.StatusOK)
-		return
-	}
 	secretMatch, err := utils.BCryptHashCheck(client.(db.Client).Secret, req.ClientSecret)
 	if err != nil {
 		responseError(w, err, http.StatusInternalServerError)
@@ -57,6 +49,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	if !secretMatch {
 		responseError(w, errors.New("incorrect client secret"), http.StatusOK)
+		return
+	}
+	user, err := db.TableUser.Select(db.UserUsername, req.Username)
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	if user == nil {
+		responseError(w, errors.New("username doesn't exist"), http.StatusOK)
 		return
 	}
 	passwordMatch, err := utils.BCryptHashCheck(user.(db.User).Password, req.Password)
@@ -68,5 +69,36 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseError(w, errors.New("incorrect password"), http.StatusOK)
 		return
 	}
-	//
+	redirects := strings.Split(client.(db.Client).Redirects, ",")
+	redirectValid := false
+	for _, redirect := range redirects {
+		if strings.Trim(redirect, " ") == req.RedirectUri {
+			redirectValid = true
+			break
+		}
+	}
+	if !redirectValid {
+		responseError(w, errors.New("invalid redirect uri"), http.StatusOK)
+		return
+	}
+	authorizationCode, err := utils.GenAuthorizationCode(utils.AuthorizationInfo{
+		ClientId:      client.(db.Client).Id,
+		Uuid:          user.(db.User).Uuid,
+		CodeChallenge: req.CodeChallenge,
+	})
+	if err != nil {
+		responseError(w, err, http.StatusInternalServerError)
+		return
+	}
+	responseJson(w, loginResp{
+		commonResp: commonResp{
+			Ok:  true,
+			Msg: "ok",
+		},
+		AuthorizationCode: authorizationCode,
+	}, http.StatusOK)
+}
+
+func authorize(w http.ResponseWriter, r *http.Request) {
+
 }

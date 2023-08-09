@@ -9,10 +9,12 @@ import (
 
 func StartListening() error {
 	mux := http.NewServeMux()
-	mux.Handle("/user/register", middlewares(http.MethodPost, register))
-	mux.Handle("/user/login", middlewares(http.MethodPost, login))
-	//mux.Handle("/client/create")
-	//mux.Handle("/client/")
+	mux.Handle("/setup/register", middlewares(http.MethodPost, register))
+	mux.Handle("/setup/client-list", middlewares(http.MethodGet, clientList))
+	mux.Handle("/setup/client-create", middlewares(http.MethodPost, clientCreate))
+	mux.Handle("/setup/client-delete", middlewares(http.MethodDelete, clientDelete))
+	mux.Handle("/auth/login", middlewares(http.MethodPost, login))
+	mux.Handle("/auth/authorize", middlewares(http.MethodPost, authorize))
 	log.Printf("start listening at %v\n", utils.Conf.HttpAddress)
 	return http.ListenAndServe(utils.Conf.HttpAddress, mux)
 }

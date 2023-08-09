@@ -10,17 +10,19 @@ import (
 type Payload struct {
 	Uuid     string
 	Username string
+	ClientId string
 }
 
-func GenerateJwt(payload Payload, clientId string, tokenAge time.Duration) (string, error) {
+func GenerateJwt(payload Payload, tokenAge time.Duration) (string, error) {
 	token, err := jwt.NewBuilder().
-		Audience([]string{clientId}).
+		Audience([]string{payload.ClientId}).
 		IssuedAt(time.Now()).
 		Issuer(Conf.JwtIssuer).
 		Expiration(time.Now().Add(tokenAge*time.Hour)).
 		NotBefore(time.Now()).
 		Claim("uuid", payload.Uuid).
 		Claim("username", payload.Username).
+		Claim("clientId", payload.ClientId).
 		Build()
 	if err != nil {
 		return "", err
