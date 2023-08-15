@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/handlers"
 	"github.com/zenpk/my-oauth/utils"
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 )
 
@@ -17,6 +17,14 @@ var (
 )
 
 func main() {
+	// catch the panic before exit
+	defer func() {
+		if err := recover(); err != nil {
+			printStack()
+			panic(err)
+		}
+	}()
+
 	flag.Parse()
 	if err := utils.Init(*mode); err != nil {
 		log.Fatalln(err)
@@ -42,17 +50,14 @@ func main() {
 		<-exited
 		log.Fatalln("gracefully exited")
 	}()
-	var str string
-	str, _ = utils.RandString(10)
-	fmt.Println(str)
-	str, _ = utils.RandString(10)
-	fmt.Println(str)
-	str, _ = utils.RandString(10)
-	fmt.Println(str)
-	str, _ = utils.RandString(10)
-	fmt.Println(str)
 
 	if err := handlers.StartListening(); err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func printStack() {
+	buf := make([]byte, 1<<16)
+	stackSize := runtime.Stack(buf, true)
+	log.Printf("=== BEGIN Goroutine stack trace ===\n%s\n=== END Goroutine stack trace ===", buf[:stackSize])
 }

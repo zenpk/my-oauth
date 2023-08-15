@@ -7,17 +7,17 @@ import (
 )
 
 type Configuration struct {
-	HttpAddress             string
-	InvitationCode          string
-	AdminPassword           string
-	AuthorizationCodeLength int
-	RefreshTokenLength      int
-	JwtIssuer               string
-	JwtPrivateKey           string
-	JwtPublicKey            string
+	HttpAddress             string                 `json:"HttpAddress"`
+	InvitationCode          string                 `json:"InvitationCode"`
+	AdminPassword           string                 `json:"AdminPassword"`
+	AuthorizationCodeLength int                    `json:"AuthorizationCodeLength"`
+	RefreshTokenLength      int                    `json:"RefreshTokenLength"`
+	JwtIssuer               string                 `json:"JwtIssuer"`
+	JwtPrivateKey           map[string]interface{} `json:"JwtPrivateKey"`
+	JwtPublicKey            map[string]interface{} `json:"JwtPublicKey"`
 
-	parsedJwtPrivateKey jwk.Key
-	parsedJwtPublicKey  jwk.Key
+	ParsedJwtPrivateKey jwk.Key `json:"-"`
+	ParsedJwtPublicKey  jwk.Key `json:"-"`
 }
 
 var Conf Configuration
@@ -34,11 +34,15 @@ func Init(mode string) error {
 
 	AuthorizationCodeMap = make(map[string]AuthorizationInfo, 0)
 
-	Conf.parsedJwtPrivateKey, err = jwk.ParseKey([]byte(Conf.JwtPrivateKey))
+	privateKeyByte, err := json.Marshal(Conf.JwtPrivateKey)
 	if err != nil {
 		return err
 	}
-	Conf.parsedJwtPublicKey, err = jwk.PublicKeyOf(Conf.parsedJwtPrivateKey)
+	Conf.ParsedJwtPrivateKey, err = jwk.ParseKey(privateKeyByte)
+	if err != nil {
+		return err
+	}
+	Conf.ParsedJwtPublicKey, err = jwk.PublicKeyOf(Conf.ParsedJwtPrivateKey)
 	if err != nil {
 		return err
 	}

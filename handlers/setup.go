@@ -148,10 +148,5 @@ func clientDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func publicKey(w http.ResponseWriter, r *http.Request) {
-	publicKeyJson := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(utils.Conf.JwtPublicKey), &publicKeyJson); err != nil {
-		responseError(w, err)
-		return
-	}
-	responseJson(w, publicKeyJson)
+	responseJson(w, utils.Conf.JwtPublicKey)
 }

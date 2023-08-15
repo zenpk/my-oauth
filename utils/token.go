@@ -29,7 +29,7 @@ func GenerateJwt(payload Payload, tokenAge time.Duration) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	serialized, err := jwt.Sign(token, jwt.WithKey(jwa.RS256, Conf.parsedJwtPrivateKey))
+	serialized, err := jwt.Sign(token, jwt.WithKey(jwa.RS256, Conf.ParsedJwtPrivateKey))
 	if err != nil {
 		return "", err
 	}
@@ -37,7 +37,7 @@ func GenerateJwt(payload Payload, tokenAge time.Duration) (string, error) {
 }
 
 func VerifyJwt(token string) error {
-	_, err := jwt.Parse([]byte(token), jwt.WithKey(jwa.RS256, Conf.parsedJwtPublicKey))
+	_, err := jwt.Parse([]byte(token), jwt.WithKey(jwa.RS256, Conf.ParsedJwtPublicKey))
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to verify JWS: %s\n", err))
 	}
