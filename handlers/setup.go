@@ -70,11 +70,8 @@ func clientList(w http.ResponseWriter, r *http.Request) {
 		clientsConverted = append(clientsConverted, converted)
 	}
 	responseJson(w, clientListResp{
-		commonResp: commonResp{
-			Ok:  true,
-			Msg: "ok",
-		},
-		Clients: clientsConverted,
+		commonResp: genOkResponse(),
+		Clients:    clientsConverted,
 	})
 }
 
@@ -148,4 +145,13 @@ func clientDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	responseOk(w)
+}
+
+func publicKey(w http.ResponseWriter, r *http.Request) {
+	publicKeyJson := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(utils.Conf.JwtPublicKey), &publicKeyJson); err != nil {
+		responseError(w, err)
+		return
+	}
+	responseJson(w, publicKeyJson)
 }

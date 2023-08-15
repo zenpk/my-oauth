@@ -57,3 +57,10 @@ func responseError(w http.ResponseWriter, err error, statusCodes ...int) {
 		Msg: err.Error(),
 	}, code)
 }
+
+func genOkResponse() commonResp {
+	return commonResp{
+		Ok:  true,
+		Msg: "ok",
+	}
+}

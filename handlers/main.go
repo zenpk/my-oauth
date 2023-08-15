@@ -13,8 +13,11 @@ func StartListening() error {
 	mux.Handle("/setup/client-list", middlewares(http.MethodGet, clientList))
 	mux.Handle("/setup/client-create", middlewares(http.MethodPost, clientCreate))
 	mux.Handle("/setup/client-delete", middlewares(http.MethodDelete, clientDelete))
+	mux.Handle("/setup/public-key", middlewares(http.MethodGet, publicKey))
 	mux.Handle("/auth/login", middlewares(http.MethodPost, login))
 	mux.Handle("/auth/authorize", middlewares(http.MethodPost, authorize))
+	mux.Handle("/auth/refresh", middlewares(http.MethodPost, refresh))
+	mux.Handle("/auth/verify", middlewares(http.MethodPost, verify))
 	log.Printf("start listening at %v\n", utils.Conf.HttpAddress)
 	return http.ListenAndServe(utils.Conf.HttpAddress, mux)
 }

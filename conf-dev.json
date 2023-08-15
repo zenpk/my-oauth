@@ -3,6 +3,7 @@
   "InvitationCode": "demo",
   "AdminPassword": "$2a$12$nA.Br7mc//sjemVPW85q/eq5JT8d3Z42LkB18lb7.0M05fp3Pjj6m",
   "AuthorizationCodeLength": 128,
+  "RefreshTokenLength": 128,
   "JwtIssuer": "demo",
   "JwtPrivateKey": {
     "p": "z_DIr92Q_xHDTEhkGScZLHDOvfOszXTSDYI6lzqPVoRxNsP0fG1BbQUxqU8PkGWmWlYeZfxHqQRbQ5pwYywm6lY_sG7LVmblhTcdKKneSRiTpm9s2XV6pz8VQAbJB0mLonfHSMhi6RoSEGp56KI0p7-jaxTyXjTLQOKIPOH5g6c",

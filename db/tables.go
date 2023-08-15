@@ -3,6 +3,7 @@ package db
 import (
 	scd "github.com/zenpk/safe-csv-db"
 	"strconv"
+	"time"
 )
 
 const (
@@ -19,7 +20,8 @@ const (
 	RefreshTokenToken      = 0
 	RefreshTokenClientId   = 1
 	RefreshTokenUuid       = 2
-	RefreshTokenExpireTime = 3
+	RefreshTokenUsername   = 3
+	RefreshTokenExpireTime = 4
 )
 
 type User struct {
@@ -80,10 +82,11 @@ func (c Client) FromRow(row []string) (scd.RecordType, error) {
 }
 
 type RefreshToken struct {
-	Token      string `json:"string"`
-	ClientId   string `json:"clientId"`
-	Uuid       string `json:"uuid"`
-	ExpireTime int64  `json:"expireTime"` // UNIX ms
+	Token      string    `json:"string"`
+	ClientId   string    `json:"clientId"`
+	Uuid       string    `json:"uuid"`
+	Username   string    `json:"username"`
+	ExpireTime time.Time `json:"expireTime"` // UNIX ms
 }
 
 func (r RefreshToken) ToRow() ([]string, error) {
@@ -91,19 +94,21 @@ func (r RefreshToken) ToRow() ([]string, error) {
 	row[RefreshTokenToken] = r.Token
 	row[RefreshTokenClientId] = r.ClientId
 	row[RefreshTokenUuid] = r.Uuid
-	row[RefreshTokenExpireTime] = strconv.FormatInt(r.ExpireTime, 10)
+	row[RefreshTokenUsername] = r.Username
+	row[RefreshTokenExpireTime] = strconv.FormatInt(r.ExpireTime.Unix(), 10)
 	return row, nil
 }
 
 func (r RefreshToken) FromRow(row []string) (scd.RecordType, error) {
-	var err error
 	var newRefreshToken RefreshToken
 	newRefreshToken.Token = row[RefreshTokenToken]
 	newRefreshToken.ClientId = row[RefreshTokenClientId]
 	newRefreshToken.Uuid = row[RefreshTokenUuid]
-	newRefreshToken.ExpireTime, err = strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
+	newRefreshToken.Username = row[RefreshTokenUsername]
+	milliTime, err := strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
 	if err != nil {
 		return nil, err
 	}
+	newRefreshToken.ExpireTime = time.UnixMilli(milliTime)
 	return newRefreshToken, nil
 }
