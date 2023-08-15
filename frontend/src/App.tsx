@@ -1,7 +1,14 @@
-import "./App.css";
+import { useState } from "react";
 
 function App() {
-  return <></>;
+  const [adminPassword, setAdminPassword] = useState("");
+  console.log(adminPassword);
+  setAdminPassword("a");
+  return (
+    <>
+      <h1>Admin Page</h1>
+    </>
+  );
 }
 
 export default App;
