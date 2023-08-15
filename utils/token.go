@@ -61,7 +61,7 @@ func GenAndInsertRefreshToken(payload Payload, tokenAge time.Duration) (string, 
 	return refreshToken, nil
 }
 
-func GetAndCleanRefreshToken(clientId string) (db.RefreshToken, error) {
+func GetAndCleanRefreshToken(refreshToken string) (db.RefreshToken, error) {
 	tokens, err := db.TableRefreshToken.All()
 	if err != nil {
 		return db.RefreshToken{}, err
@@ -72,8 +72,9 @@ func GetAndCleanRefreshToken(clientId string) (db.RefreshToken, error) {
 			if err := db.TableRefreshToken.Delete(db.RefreshTokenToken, token.(db.RefreshToken).Token); err != nil {
 				return db.RefreshToken{}, err
 			}
+			continue
 		}
-		if token.(db.RefreshToken).ClientId == clientId {
+		if token.(db.RefreshToken).Token == refreshToken {
 			// also delete this, because a new one will be generated
 			if err := db.TableRefreshToken.Delete(db.RefreshTokenToken, token.(db.RefreshToken).Token); err != nil {
 				return db.RefreshToken{}, err

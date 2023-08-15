@@ -1,0 +1,36 @@
+### register
+POST {{url}}/setup/register?code=demo
+Content-Type: application/json
+
+{
+  "username": "temp",
+  "password": "temp"
+}
+
+### client-create
+POST {{url}}/setup/client-create
+Content-Type: application/json
+
+{
+  "id": "my",
+  "secret": "my",
+  "redirects": "http://localhost:3000/,http://127.0.0.1:3000/",
+  "accessTokenAge": 1,
+  "refreshTokenAge": 24,
+  "adminPassword": "demo"
+}
+
+### client-delete
+DELETE {{url}}/setup/client-delete
+Content-Type: application/json
+
+{
+  "id": "my",
+  "adminPassword": "demo"
+}
+
+### client-list
+GET {{url}}/setup/client-list
+
+### public-key
+GET {{url}}/setup/public-key

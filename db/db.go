@@ -2,7 +2,6 @@ package db
 
 import (
 	"github.com/zenpk/safe-csv-db"
-	"log"
 )
 
 var TableUser *scd.Table
@@ -19,7 +18,7 @@ func Init(prepared, done chan struct{}) error {
 	defer TableUser.Close()
 	go func() {
 		if err := TableUser.ListenChange(); err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 	}()
 
@@ -30,7 +29,7 @@ func Init(prepared, done chan struct{}) error {
 	defer TableClient.Close()
 	go func() {
 		if err := TableClient.ListenChange(); err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 	}()
 
@@ -41,7 +40,7 @@ func Init(prepared, done chan struct{}) error {
 	defer TableRefreshToken.Close()
 	go func() {
 		if err := TableRefreshToken.ListenChange(); err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 	}()
 

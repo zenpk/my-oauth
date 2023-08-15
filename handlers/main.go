@@ -77,7 +77,7 @@ func methodMiddleware(method string, next http.Handler) http.Handler {
 				Ok:  false,
 				Msg: fmt.Sprintf("HTTP method %v is not supported", r.Method),
 			}
-			responseJson(w, data, http.StatusBadRequest)
+			responseJson(w, data, http.StatusNotFound)
 			return
 		}
 		next.ServeHTTP(w, r)

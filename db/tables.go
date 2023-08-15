@@ -51,11 +51,11 @@ type Client struct {
 	Secret          string `json:"secret"`
 	Redirects       string `json:"redirects"`
 	AccessTokenAge  int    `json:"accessTokenAge"`  // hour
-	RefreshTokenAge int    `json:"RefreshTokenAge"` // hour
+	RefreshTokenAge int    `json:"refreshTokenAge"` // hour
 }
 
 func (c Client) ToRow() ([]string, error) {
-	row := make([]string, 4)
+	row := make([]string, 5)
 	row[ClientId] = c.Id
 	row[ClientSecret] = c.Secret
 	row[ClientRedirects] = c.Redirects
@@ -74,7 +74,7 @@ func (c Client) FromRow(row []string) (scd.RecordType, error) {
 	if err != nil {
 		return nil, err
 	}
-	newClient.RefreshTokenAge, err = strconv.Atoi(row[ClientAccessTokenAge])
+	newClient.RefreshTokenAge, err = strconv.Atoi(row[ClientRefreshTokenAge])
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ type RefreshToken struct {
 }
 
 func (r RefreshToken) ToRow() ([]string, error) {
-	row := make([]string, 3)
+	row := make([]string, 5)
 	row[RefreshTokenToken] = r.Token
 	row[RefreshTokenClientId] = r.ClientId
 	row[RefreshTokenUuid] = r.Uuid

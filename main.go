@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 )
 
@@ -17,17 +16,9 @@ var (
 )
 
 func main() {
-	// catch the panic before exit
-	defer func() {
-		if err := recover(); err != nil {
-			printStack()
-			panic(err)
-		}
-	}()
-
 	flag.Parse()
 	if err := utils.Init(*mode); err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 
 	done := make(chan struct{})
@@ -35,7 +26,7 @@ func main() {
 	exited := make(chan struct{})
 	go func() {
 		if err := db.Init(prepared, done); err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 		exited <- struct{}{}
 	}()
@@ -48,16 +39,10 @@ func main() {
 		<-osSignalChan
 		done <- struct{}{}
 		<-exited
-		log.Fatalln("gracefully exited")
+		log.Println("gracefully exited")
 	}()
 
 	if err := handlers.StartListening(); err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
-}
-
-func printStack() {
-	buf := make([]byte, 1<<16)
-	stackSize := runtime.Stack(buf, true)
-	log.Printf("=== BEGIN Goroutine stack trace ===\n%s\n=== END Goroutine stack trace ===", buf[:stackSize])
 }

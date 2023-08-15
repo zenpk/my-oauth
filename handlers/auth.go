@@ -16,7 +16,7 @@ type loginReq struct {
 	ClientId      string `json:"clientId"`
 	ClientSecret  string `json:"clientSecret"`
 	CodeChallenge string `json:"codeChallenge"`
-	RedirectUri   string `json:"redirectUri"`
+	Redirect      string `json:"redirect"`
 }
 
 type loginResp struct {
@@ -30,7 +30,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w, err)
 		return
 	}
-	if req.Username == "" || req.Password == "" || req.ClientId == "" || req.ClientSecret == "" || req.CodeChallenge == "" || req.RedirectUri == "" {
+	if req.Username == "" || req.Password == "" || req.ClientId == "" || req.ClientSecret == "" || req.CodeChallenge == "" || req.Redirect == "" {
 		responseInputError(w)
 		return
 	}
@@ -60,7 +60,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	redirects := strings.Split(client.Redirects, ",")
 	redirectValid := false
 	for _, redirect := range redirects {
-		if strings.Trim(redirect, " ") == req.RedirectUri {
+		if strings.Trim(redirect, " ") == req.Redirect {
 			redirectValid = true
 			break
 		}
@@ -118,6 +118,10 @@ func authorize(w http.ResponseWriter, r *http.Request) {
 		responseMsg(w, err.Error())
 		return
 	}
+	if info.ClientId != client.Id {
+		responseMsg(w, "client id not match")
+		return
+	}
 	payload := utils.Payload{
 		Uuid:     info.Uuid,
 		Username: info.Username,
@@ -161,9 +165,13 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err, statusCode)
 		return
 	}
-	oldRefreshToken, err := utils.GetAndCleanRefreshToken(client.Id)
+	oldRefreshToken, err := utils.GetAndCleanRefreshToken(req.RefreshToken)
 	if err != nil {
 		responseError(w, err)
+		return
+	}
+	if oldRefreshToken.ClientId != client.Id {
+		responseMsg(w, "client id not match")
 		return
 	}
 	payload := utils.Payload{
@@ -189,7 +197,7 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 type checkReq struct {
-	Token string `json:"token"`
+	AccessToken string `json:"accessToken"`
 }
 
 func verify(w http.ResponseWriter, r *http.Request) {
@@ -198,11 +206,11 @@ func verify(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w, err)
 		return
 	}
-	if req.Token == "" {
+	if req.AccessToken == "" {
 		responseInputError(w)
 		return
 	}
-	if err := utils.VerifyJwt(req.Token); err != nil {
+	if err := utils.VerifyJwt(req.AccessToken); err != nil {
 		responseError(w, err)
 		return
 	}

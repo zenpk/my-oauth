@@ -1,0 +1,41 @@
+### login
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "temp",
+  "password": "temp",
+  "clientId": "my",
+  "clientSecret": "my",
+  "codeChallenge": "KUv_Uv2ITIs_h9_G4aC4T5U8F2HY-3oJkc3PQsHj-Y8",
+  "redirect": "http://localhost:3000/"
+}
+
+### authorize
+POST {{url}}/auth/authorize
+Content-Type: application/json
+
+{
+  "clientId": "my",
+  "clientSecret": "my",
+  "authorizationCode": "YTZk6w6DMHcw6CbcwJQ8Jaml9JWsn2trwYfnSHms7jqKh8jBaebGtALrILF8aZhnPovYswIqBLkw2Et9DFjTnkpSdb4NHUh177LXDje8ITi0IvQs8JuGYMK5naS9jUec",
+  "codeVerifier": "rWg4iNSb-A4Eo3NolK1Oom-aCDkQqwkfBB1IufNGnBWujh5h3a8TCE2ZzPWjn-qR4YvX5V39z_SSy8rn2UKn8YUB3fP4wZzctQsn3OT2CWiyX70XxoHhbjE--75cRuMe"
+}
+
+### refresh
+POST {{url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "clientId": "my",
+  "clientSecret": "my",
+  "refreshToken": "0hUzVRZO8JJqiXCkKOvQFMOE3ovatTV2mlHrU3XaFle4j1aHugU7MoUUqzD4KnF5n1JZXaWXrNAVil5fJMW1RWq55M7AO5lwBb5pVQAVV6INxr8Zm8jF0uy6stgTpbUr"
+}
+
+### verify
+POST {{url}}/auth/verify
+Content-Type: application/json
+
+{
+  "accessToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRlbW8iLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsibXkiXSwiY2xpZW50SWQiOiJteSIsImV4cCI6MTY5MjA4Njk5NiwiaWF0IjoxNjkyMDgzMzk2LCJpc3MiOiJkZW1vIiwibmJmIjoxNjkyMDgzMzk2LCJ1c2VybmFtZSI6InRlbXAiLCJ1dWlkIjoiYTMzZTNjYzAtNzNlNS00ZjRkLWJmMzQtNTNjMWE0MWM2ZjNmIn0.GUR3HrYMDm_9FVCm34H6mSLdYeDGHkLp-SWC7W0QPmctoFJVKfUBENocE6aT8XNak8rfdeidd2ErLlO6Adhb4uQ6mB0N025LjYyxSHiJ7zeT38kfwDlg2_suHJQlO7ezA_FM_VfqM3B-KsdT2CyPlvfIW7_iIAFZEs4NNZY5cX1DbQyWAL-0HYc_UmYtoRQj7DN0jkdy--vRgIrEq3faGaK-TLBH7Dy764Rg7h1l_ZgfVsVpH8vKark9NwxIbgWU2URcAodA-mIcoEQhtrrwBtnoheKsDjKcCDLTJ7uZsifE5TrfjO9uKmTFrPD7vR58vNkxvVkgWD8SDd2a4LsJlA"
+}

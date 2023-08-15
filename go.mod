@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/lestrrat-go/jwx/v2 v2.0.11
-	github.com/zenpk/safe-csv-db v1.1.0
+	github.com/lestrrat-go/jwx/v2 v2.0.12
+	github.com/zenpk/safe-csv-db v1.2.0
 	golang.org/x/crypto v0.12.0
 )
 

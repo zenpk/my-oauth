@@ -1,7 +1,0 @@
-OPTIONS {{url}}/user/register?code=demo
-Content-Type: application/json
-
-{
-  "username": "temp",
-  "password": "temp"
-}
