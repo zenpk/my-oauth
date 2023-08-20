@@ -31,7 +31,7 @@ func responseOk(w http.ResponseWriter) {
 
 func responseMsg(w http.ResponseWriter, msg string) {
 	responseJson(w, commonResp{
-		Ok:  true,
+		Ok:  false,
 		Msg: msg,
 	})
 }

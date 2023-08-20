@@ -76,7 +76,7 @@ func clientList(w http.ResponseWriter, r *http.Request) {
 	for _, client := range clients {
 		converted := clientWithoutSecret{
 			Id:              client.(db.Client).Id,
-			Redirects:       client.(db.Client).Secret,
+			Redirects:       client.(db.Client).Redirects,
 			AccessTokenAge:  client.(db.Client).AccessTokenAge,
 			RefreshTokenAge: client.(db.Client).RefreshTokenAge,
 		}

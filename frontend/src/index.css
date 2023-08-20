@@ -87,7 +87,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 table {
-  border: solid 1px black;
+  border: #cccccc solid 1px;
   border-radius: 0.25rem;
   border-spacing: 0;
   text-align: left;
@@ -97,12 +97,12 @@ table {
 }
 
 thead > tr {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: #efefef;
 }
 
 th, td {
-  border-right: solid 1px black;
-  border-bottom: solid 2px black;
+  border-right: #cccccc solid 1px;
+  border-bottom: #cccccc solid 1px;
   padding: 0.5rem 1rem;
 }
 
@@ -111,7 +111,7 @@ td:last-child, th:last-child {
 }
 
 td {
-  border-bottom: solid 1px black;
+  border-bottom: #cccccc solid 1px;
 }
 
 tbody > tr:last-child > td {

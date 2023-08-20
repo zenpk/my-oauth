@@ -1,24 +1,39 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Input } from "./components/Input.tsx";
 import { Button } from "./components/Button.tsx";
+import {
+  Client,
+  clientCreate,
+  ClientCreateReq,
+  clientList,
+  ClientListResp,
+  CommonResp,
+} from "./api.ts";
 
 export function Admin() {
   const [adminPassword, setAdminPassword] = useState("");
   const [warn, setWarn] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [clients, setClients] = useState<Client[]>([]);
   const adminPasswordRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (adminPassword !== "" && !showAddForm) {
+      clientList()
+        .then((resp) => {
+          const data = resp.data as ClientListResp;
+          if (!data.ok) {
+            setWarn(data.msg);
+            return;
+          }
+          setClients(data.clients);
+        })
+        .catch((err) => setWarn(err.toString()));
     }
   }, [adminPassword, showAddForm]);
 
   function saveAdminPassword() {
-    if (
-      adminPasswordRef &&
-      adminPasswordRef.current &&
-      adminPasswordRef.current.value
-    ) {
+    if (adminPasswordRef.current && adminPasswordRef.current.value) {
       setAdminPassword(adminPasswordRef.current.value);
     } else {
       setWarn("Save admin password failed");
@@ -51,7 +66,13 @@ export function Admin() {
               }}
             />
           )}
-          {showAddForm && <AddForm setShowAddForm={setShowAddForm} />}
+          {showAddForm && (
+            <AddForm
+              setShowAddForm={setShowAddForm}
+              setWarn={setWarn}
+              adminPassword={adminPassword}
+            />
+          )}
           <table>
             <thead>
               <tr>
@@ -62,7 +83,18 @@ export function Admin() {
                 <th>Action</th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+              {clients.map((client) => {
+                return (
+                  <tr>
+                    <td>{client.id}</td>
+                    <td>{client.accessTokenAge}</td>
+                    <td>{client.refreshTokenAge}</td>
+                    <td>{client.redirects}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
           </table>
         </div>
       )}
@@ -72,8 +104,12 @@ export function Admin() {
 
 function AddForm({
   setShowAddForm,
+  setWarn,
+  adminPassword,
 }: {
   setShowAddForm: Dispatch<SetStateAction<boolean>>;
+  setWarn: Dispatch<SetStateAction<string>>;
+  adminPassword: string;
 }) {
   const idRef = useRef<HTMLInputElement | null>(null);
   const secretRef = useRef<HTMLInputElement | null>(null);
@@ -82,7 +118,39 @@ function AddForm({
   const redirectRef = useRef<HTMLInputElement | null>(null);
 
   function click() {
-    setShowAddForm(false);
+    if (
+      idRef.current &&
+      secretRef.current &&
+      accessAgeRef.current &&
+      refreshAgeRef.current &&
+      redirectRef.current
+    ) {
+      if (
+        idRef.current.value &&
+        secretRef.current.value &&
+        accessAgeRef.current.value &&
+        refreshAgeRef.current.value &&
+        redirectRef.current.value
+      ) {
+        const client: ClientCreateReq = {
+          id: idRef.current.value,
+          secret: secretRef.current.value,
+          accessTokenAge: +accessAgeRef.current.value,
+          refreshTokenAge: +refreshAgeRef.current.value,
+          redirects: redirectRef.current.value,
+          adminPassword: adminPassword,
+        };
+        clientCreate(client)
+          .then((resp) => {
+            const data = resp.data as CommonResp;
+            if (!data.ok) {
+              setWarn(data.msg);
+            }
+          })
+          .catch((err) => setWarn(err.toString()));
+        setShowAddForm(false);
+      }
+    }
   }
 
   return (
