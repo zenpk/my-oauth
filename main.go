@@ -40,6 +40,7 @@ func main() {
 		done <- struct{}{}
 		<-exited
 		log.Println("gracefully exited")
+		os.Exit(0)
 	}()
 
 	if err := handlers.StartListening(); err != nil {

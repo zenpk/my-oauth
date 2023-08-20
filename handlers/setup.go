@@ -9,18 +9,19 @@ import (
 )
 
 type registerReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	InvitationCode string `json:"invitationCode"`
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Get("code") != utils.Conf.InvitationCode {
-		responseMsg(w, "sorry, you need an invitation code or the code is incorrect")
-		return
-	}
 	var req registerReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
+		return
+	}
+	if req.InvitationCode != utils.Conf.InvitationCode {
+		responseMsg(w, "sorry, you need an invitation code or the code is incorrect")
 		return
 	}
 	if req.Username == "" || req.Password == "" {

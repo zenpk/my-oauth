@@ -1,10 +1,11 @@
 ### register
-POST {{url}}/setup/register?code=demo
+POST {{url}}/setup/register
 Content-Type: application/json
 
 {
   "username": "temp",
-  "password": "temp"
+  "password": "temp",
+  "invitationCode": "demo"
 }
 
 ### client-create
