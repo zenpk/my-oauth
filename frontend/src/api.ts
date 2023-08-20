@@ -50,17 +50,13 @@ export async function clientDelete({
 
 // export async function login() {}
 
-type Response<T> = {
-  [K: string]: T;
-} & CommonResp;
-
-async function axiosGet<T>(
+async function axiosGet<T extends CommonResp>(
   url: string,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
   try {
     const resp = await axios.get(`${BASE}${url}`);
-    const data = resp.data as Response<T>;
+    const data = resp.data as T;
     if (!data.ok) {
       setWarn(data.msg);
       return null;
@@ -72,14 +68,14 @@ async function axiosGet<T>(
   }
 }
 
-async function axiosPost<T>(
+async function axiosPost<T extends CommonResp>(
   url: string,
   body: any,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
   try {
     const resp = await axios.post(`${BASE}${url}`, body);
-    const data = resp.data as Response<T>;
+    const data = resp.data as T;
     if (!data.ok) {
       setWarn(data.msg);
       return null;
@@ -91,14 +87,14 @@ async function axiosPost<T>(
   }
 }
 
-async function axiosDelete<T>(
+async function axiosDelete<T extends CommonResp>(
   url: string,
   body: any,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
   try {
     const resp = await axios.delete(`${BASE}${url}`, body);
-    const data = resp.data as Response<T>;
+    const data = resp.data as T;
     if (!data.ok) {
       setWarn(data.msg);
       return null;

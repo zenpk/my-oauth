@@ -1,13 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Input } from "./components/Input.tsx";
 import { Button } from "./components/Button.tsx";
-import {
-  Client,
-  clientCreate,
-  ClientCreateReq,
-  clientList,
-  ClientListResp,
-} from "./api.ts";
+import { Client, clientCreate, ClientCreateReq, clientList } from "./api.ts";
 
 export function Admin() {
   const [adminPassword, setAdminPassword] = useState("");
@@ -20,8 +14,7 @@ export function Admin() {
     if (adminPassword !== "" && !showAddForm) {
       clientList(setWarn).then((resp) => {
         if (resp) {
-          const data = resp as ClientListResp;
-          setClients(data.clients);
+          setClients(resp.clients);
         }
       });
     }
