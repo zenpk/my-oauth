@@ -7,7 +7,6 @@ import {
   ClientCreateReq,
   clientList,
   ClientListResp,
-  CommonResp,
 } from "./api.ts";
 
 export function Admin() {
@@ -19,16 +18,12 @@ export function Admin() {
 
   useEffect(() => {
     if (adminPassword !== "" && !showAddForm) {
-      clientList()
-        .then((resp) => {
-          const data = resp.data as ClientListResp;
-          if (!data.ok) {
-            setWarn(data.msg);
-            return;
-          }
+      clientList(setWarn).then((resp) => {
+        if (resp) {
+          const data = resp as ClientListResp;
           setClients(data.clients);
-        })
-        .catch((err) => setWarn(err.toString()));
+        }
+      });
     }
   }, [adminPassword, showAddForm]);
 
@@ -140,15 +135,11 @@ function AddForm({
           redirects: redirectRef.current.value,
           adminPassword: adminPassword,
         };
-        clientCreate(client)
-          .then((resp) => {
-            const data = resp.data as CommonResp;
-            if (!data.ok) {
-              setWarn(data.msg);
-            }
-          })
-          .catch((err) => setWarn(err.toString()));
-        setShowAddForm(false);
+        clientCreate(client, setWarn).then((resp) => {
+          if (resp) {
+            setShowAddForm(false);
+          }
+        });
       }
     }
   }
