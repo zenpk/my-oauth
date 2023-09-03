@@ -37,3 +37,16 @@ export async function clientDeleteApi(
 ) {
   return axiosDelete<CommonResp>("/setup/client-delete", req, setWarn);
 }
+
+export type RegisterReq = {
+  username: string;
+  password: string;
+  invitationCode: string;
+};
+
+export async function registerApi(
+  req: RegisterReq,
+  setWarn: Dispatch<SetStateAction<string>>,
+) {
+  return axiosPost<CommonResp>("/setup/register", req, setWarn);
+}
