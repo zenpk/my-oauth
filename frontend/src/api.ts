@@ -38,13 +38,10 @@ export type ClientDeleteReq = {
   adminPassword: string;
 };
 
-export async function clientDelete({
-  req,
-  setWarn,
-}: {
-  req: ClientDeleteReq;
-  setWarn: Dispatch<SetStateAction<string>>;
-}) {
+export async function clientDelete(
+  req: ClientDeleteReq,
+  setWarn: Dispatch<SetStateAction<string>>,
+) {
   return axiosDelete<CommonResp>("/setup/client-delete", req, setWarn);
 }
 
@@ -61,10 +58,12 @@ async function axiosGet<T extends CommonResp>(
       setWarn(data.msg);
       return null;
     } else {
+      setWarn("");
       return data;
     }
   } catch (err: any) {
     setWarn(err.toString());
+    return null;
   }
 }
 
@@ -80,10 +79,12 @@ async function axiosPost<T extends CommonResp>(
       setWarn(data.msg);
       return null;
     } else {
+      setWarn("");
       return data;
     }
   } catch (err: any) {
     setWarn(err.toString());
+    return null;
   }
 }
 
@@ -93,15 +94,17 @@ async function axiosDelete<T extends CommonResp>(
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
   try {
-    const resp = await axios.delete(`${BASE}${url}`, body);
+    const resp = await axios.delete(`${BASE}${url}`, { data: body });
     const data = resp.data as T;
     if (!data.ok) {
       setWarn(data.msg);
       return null;
     } else {
+      setWarn("");
       return data;
     }
   } catch (err: any) {
     setWarn(err.toString());
+    return null;
   }
 }

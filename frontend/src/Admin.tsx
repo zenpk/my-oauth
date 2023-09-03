@@ -1,13 +1,21 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Input } from "./components/Input.tsx";
 import { Button } from "./components/Button.tsx";
-import { Client, clientCreate, ClientCreateReq, clientList } from "./api.ts";
+import {
+  Client,
+  clientCreate,
+  ClientCreateReq,
+  clientDelete,
+  ClientDeleteReq,
+  clientList,
+} from "./api.ts";
 
 export function Admin() {
   const [adminPassword, setAdminPassword] = useState("");
   const [warn, setWarn] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
+  const [triggerRefresh, setTriggerRefresh] = useState(0);
   const adminPasswordRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -18,7 +26,7 @@ export function Admin() {
         }
       });
     }
-  }, [adminPassword, showAddForm]);
+  }, [adminPassword, showAddForm, triggerRefresh]);
 
   function saveAdminPassword() {
     if (adminPasswordRef.current && adminPasswordRef.current.value) {
@@ -26,6 +34,16 @@ export function Admin() {
     } else {
       setWarn("Save admin password failed");
     }
+  }
+
+  function deleteClient(id: string) {
+    const req: ClientDeleteReq = { id: id, adminPassword: adminPassword };
+    console.log(req);
+    clientDelete(req, setWarn).then((resp) => {
+      if (resp !== null) {
+        setTriggerRefresh((prev) => prev + 1);
+      }
+    });
   }
 
   return (
@@ -74,11 +92,19 @@ export function Admin() {
             <tbody>
               {clients.map((client) => {
                 return (
-                  <tr>
+                  <tr key={client.id}>
                     <td>{client.id}</td>
                     <td>{client.accessTokenAge}</td>
                     <td>{client.refreshTokenAge}</td>
                     <td>{client.redirects}</td>
+                    <td>
+                      <Button
+                        text={"Delete"}
+                        click={() => {
+                          deleteClient(client.id);
+                        }}
+                      />
+                    </td>
                   </tr>
                 );
               })}
