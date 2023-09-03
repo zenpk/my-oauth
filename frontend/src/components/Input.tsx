@@ -23,11 +23,13 @@ export function Input({
   }
 
   return (
-    <div className={"flex-basic-column"}>
-      <label htmlFor={label}>{label}</label>
+    <div className={"flex-basic-column full-width"}>
+      <label htmlFor={label} className={"label"}>
+        {label}
+      </label>
       <div className={"flex-basic"}>
         <input
-          className={"input"}
+          className={"input full-width"}
           id={label}
           ref={myRef}
           type={inputType}

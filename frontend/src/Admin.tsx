@@ -3,12 +3,12 @@ import { Input } from "./components/Input.tsx";
 import { Button } from "./components/Button.tsx";
 import {
   Client,
-  clientCreate,
+  clientCreateApi,
   ClientCreateReq,
-  clientDelete,
+  clientDeleteApi,
   ClientDeleteReq,
-  clientList,
-} from "./api.ts";
+  clientListApi,
+} from "./apis/setup.ts";
 
 export function Admin() {
   const [adminPassword, setAdminPassword] = useState("");
@@ -20,7 +20,7 @@ export function Admin() {
 
   useEffect(() => {
     if (adminPassword !== "" && !showAddForm) {
-      clientList(setWarn).then((resp) => {
+      clientListApi(setWarn).then((resp) => {
         if (resp) {
           setClients(resp.clients);
         }
@@ -36,10 +36,9 @@ export function Admin() {
     }
   }
 
-  function deleteClient(id: string) {
+  function clientDelete(id: string) {
     const req: ClientDeleteReq = { id: id, adminPassword: adminPassword };
-    console.log(req);
-    clientDelete(req, setWarn).then((resp) => {
+    clientDeleteApi(req, setWarn).then((resp) => {
       if (resp !== null) {
         setTriggerRefresh((prev) => prev + 1);
       }
@@ -101,7 +100,7 @@ export function Admin() {
                       <Button
                         text={"Delete"}
                         click={() => {
-                          deleteClient(client.id);
+                          clientDelete(client.id);
                         }}
                       />
                     </td>
@@ -154,7 +153,7 @@ function AddForm({
           redirects: redirectRef.current.value,
           adminPassword: adminPassword,
         };
-        clientCreate(client, setWarn).then((resp) => {
+        clientCreateApi(client, setWarn).then((resp) => {
           if (resp) {
             setShowAddForm(false);
           }

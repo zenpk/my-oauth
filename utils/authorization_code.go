@@ -24,6 +24,7 @@ func GenAuthorizationCode(info AuthorizationInfo) (string, error) {
 	return code, nil
 }
 
+// VerifyAuthorizationCode verifier(base64url) -> []byte -> sha256([]byte) -> base64url should == challenge(base64url)
 func VerifyAuthorizationCode(code string, codeVerifier string) (AuthorizationInfo, error) {
 	info, ok := AuthorizationCodeMap[code]
 	if !ok {

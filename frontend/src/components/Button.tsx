@@ -1,26 +1,34 @@
 import { useState } from "react";
 
-export function Button({ text, click }: { text: string; click?: () => void }) {
-  const [className, setClassName] = useState("button");
+export function Button({
+  text,
+  click,
+  className,
+}: {
+  text: string;
+  click?: () => void;
+  className?: string;
+}) {
+  const [myClassName, setMyClassName] = useState(`${className} button`);
 
   function mouseDown() {
-    setClassName("button button-pressed");
+    setMyClassName(`${className} button button-pressed`);
   }
 
   function mouseUp() {
-    setClassName("button");
+    setMyClassName(`${className} button`);
     if (click) {
       click();
     }
   }
 
   function mouseLeave() {
-    setClassName("button");
+    setMyClassName(`${className} button`);
   }
 
   return (
     <button
-      className={className}
+      className={myClassName}
       onMouseDown={mouseDown}
       onMouseUp={mouseUp}
       onMouseLeave={mouseLeave}

@@ -64,10 +64,16 @@ h1, h2, h3, h4, h5, h6 {
   color: black;
   border-radius: 0.25rem;
   padding: 0.5rem;
+  margin: 0;
 }
 
 .input:focus {
   outline: #a0bfd7 solid 2px;
+}
+
+.label {
+  margin: 0;
+  padding: 0;
 }
 
 .flex-basic {
@@ -81,9 +87,13 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
 }
 
-.flex-center{
+.flex-center {
   justify-content: center;
   align-items: center;
+}
+
+.full-width {
+  width: 100%;
 }
 
 table {
