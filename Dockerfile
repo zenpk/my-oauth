@@ -14,10 +14,13 @@ FROM nginx:1.21-alpine AS final
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built backend
-COPY --from=backend-builder /app/backend/backend /usr/share/nginx/html/api
+COPY --from=backend-builder /app/backend/backend /bin/backend
 
 # Copy built frontend
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
+
+# Run backend
+ENTRYPOINT ["/bin/backend", "--mode=prod"]
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
