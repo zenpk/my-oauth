@@ -7,17 +7,8 @@ COPY ./ .
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o backend .
 
-# Build frontend
-FROM node:14 AS frontend-builder
-
-WORKDIR /app/frontend
-COPY ./frontend .
-
-RUN yarn install
-RUN yarn build
-
 # Final image with Nginx
-FROM nginx:1.21-alpine
+FROM nginx:1.21-alpine AS final
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf

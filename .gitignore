@@ -171,3 +171,6 @@ sketch
 
 # my
 conf-prod.json
+frontend/node_modules/
+frontend/.idea/
+frontend/dist/
