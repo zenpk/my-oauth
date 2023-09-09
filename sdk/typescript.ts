@@ -1,16 +1,40 @@
 import axios from "axios";
 
-
 export type ChallengeVerifier = {
     codeChallenge: string;
     codeVerifier: string;
 }
 
-export type LoginInfo = {
+export type LoginReq = {
     clientId: string;
     clientSecret: string;
     redirect: string;
     codeChallenge: string;
+}
+
+export type AuthorizeReq = {
+    clientId: string;
+    clientSecret: string;
+    codeVerifier: string;
+    authorizationCode: string;
+}
+
+export type AuthorizeResp = {
+    ok: boolean;
+    msg: string;
+    accessToken: string;
+    refreshToken: string;
+}
+
+export type RefreshReq = {
+    clientId: string;
+    clientSecret: string;
+    refreshToken: string;
+}
+
+export type VerifyResp = {
+    ok: boolean;
+    msg: string;
 }
 
 export class MyOAuthSdk {
@@ -22,35 +46,50 @@ export class MyOAuthSdk {
 
     async genChallengeVerifier(len: number) {
         const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = Math.floor(Math.random() * 256);
-        }
+        crypto.getRandomValues(bytes);
 
-        const challenge = btoa(String.fromCharCode.apply(null, bytes))
-            .replace('+', '-')
-            .replace('/', '_')
-            .replace(/=+$/, '');
+        const verifier = this.arrayToBase64Url(bytes);
 
-        const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
+        const encoder = new TextEncoder();
+        const data = encoder.encode(verifier);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = new Uint8Array(hashBuffer);
-        const verifier = btoa(String.fromCharCode.apply(null, hashArray))
-            .replace('+', '-')
-            .replace('/', '_')
-            .replace(/=+$/, '');
+        const challenge = this.arrayToBase64Url(hashArray)
 
-        return {string1: challenge, string2: verifier};
+        const challengeVerifier: ChallengeVerifier = {codeChallenge: challenge, codeVerifier: verifier};
+        return challengeVerifier;
     }
 
-    redirectLogin(info: LoginInfo) {
-        const clientId = this.urlEncode(info.clientId);
-        const clientSecret = this.urlEncode(info.clientSecret);
-        const redirect = this.urlEncode(info.redirect);
-        const codeChallenge = this.urlEncode(info.codeChallenge);
-        window.location.replace(`${this.endpoint}/login?clientId=${clientId}&cliendSecret=${clientSecret}&codeChallenge=${codeChallenge}&redirect=${redirect}`);
+    redirectLogin(req: LoginReq) {
+        const clientId = this.stringToBase64Url(req.clientId);
+        const clientSecret = this.stringToBase64Url(req.clientSecret);
+        const redirect = this.stringToBase64Url(req.redirect);
+        const codeChallenge = this.stringToBase64Url(req.codeChallenge);
+        window.location.replace(`${this.endpoint}/login?clientId=${clientId}&clientSecret=${clientSecret}&codeChallenge=${codeChallenge}&redirect=${redirect}`);
     }
 
-
-    urlEncode(src: string) {
+    authorize(req: AuthorizeReq): Promise<AuthorizeResp> {
+        const urlParams = new URLSearchParams(window.location.search);
+        req.authorizationCode = urlParams.get("authorizationCode");
+        return axios.post(`${this.endpoint}/api/auth/authorize`, req);
     }
 
+    refresh(req: RefreshReq): Promise<AuthorizeResp> {
+        return axios.post(`${this.endpoint}/api/auth/refresh`, req);
+    }
+
+    verify(accessToken: string): Promise<VerifyResp> {
+        return axios.post(`${this.endpoint}/api/auth/verify`, {accessToken: accessToken});
+    }
+
+    arrayToBase64Url(array: Uint8Array) {
+        return this.stringToBase64Url(String.fromCharCode.apply(null, array));
+    }
+
+    stringToBase64Url(src: string) {
+        return btoa(src)
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
+    }
 }

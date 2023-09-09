@@ -7,7 +7,7 @@ Content-Type: application/json
   "password": "temp",
   "clientId": "my",
   "clientSecret": "my",
-  "codeChallenge": "KUv_Uv2ITIs_h9_G4aC4T5U8F2HY-3oJkc3PQsHj-Y8",
+  "codeChallenge": "plP8aHmykBUgarC_HDHzGmYhnJiipBy69FE8KWoLMqI",
   "redirect": "http://localhost:3000/"
 }
 
@@ -18,8 +18,8 @@ Content-Type: application/json
 {
   "clientId": "my",
   "clientSecret": "my",
-  "authorizationCode": "YTZk6w6DMHcw6CbcwJQ8Jaml9JWsn2trwYfnSHms7jqKh8jBaebGtALrILF8aZhnPovYswIqBLkw2Et9DFjTnkpSdb4NHUh177LXDje8ITi0IvQs8JuGYMK5naS9jUec",
-  "codeVerifier": "rWg4iNSb-A4Eo3NolK1Oom-aCDkQqwkfBB1IufNGnBWujh5h3a8TCE2ZzPWjn-qR4YvX5V39z_SSy8rn2UKn8YUB3fP4wZzctQsn3OT2CWiyX70XxoHhbjE--75cRuMe"
+  "authorizationCode": "FZukFe2xCsz3abtmYUPTmNCQ0WKVDAhsjXqIgeIEIe2frR9ph0N37PmegirBLsdHN4cplKtdzRJ1L84qZaAiwY7i45TwK4ObHt0rX2JJ9uy73Su33Z8BfVQFB4wxZczf",
+  "codeVerifier": "tpWFpflpskMgYA"
 }
 
 ### refresh
