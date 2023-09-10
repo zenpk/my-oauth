@@ -37,6 +37,15 @@ export type VerifyResp = {
     msg: string;
 }
 
+export type PublicJwk = {
+    kty: string;
+    e: string;
+    use: string;
+    kid: string;
+    alg: string;
+    n: string;
+}
+
 export class MyOAuthSdk {
     endpoint: string;
 
@@ -54,7 +63,7 @@ export class MyOAuthSdk {
         const data = encoder.encode(verifier);
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = new Uint8Array(hashBuffer);
-        const challenge = this.arrayToBase64Url(hashArray)
+        const challenge = this.arrayToBase64Url(hashArray);
 
         const challengeVerifier: ChallengeVerifier = {codeChallenge: challenge, codeVerifier: verifier};
         return challengeVerifier;
@@ -80,6 +89,10 @@ export class MyOAuthSdk {
 
     verify(accessToken: string): Promise<VerifyResp> {
         return axios.post(`${this.endpoint}/api/auth/verify`, {accessToken: accessToken});
+    }
+
+    getPublicKey(): Promise<PublicJwk> {
+        return axios.get(`${this.endpoint}/api/setup/public-key`);
     }
 
     arrayToBase64Url(array: Uint8Array) {
