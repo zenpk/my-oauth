@@ -26,7 +26,7 @@ COPY db/user.csv /app/db/user.csv
 COPY conf-prod.json /app/conf-prod.json
 
 # Copy built backend
-COPY --from=backend-builder /app/backend /app/backend
+COPY --from=backend-builder /app/backend /app/
 
 # Copy built frontend
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html
