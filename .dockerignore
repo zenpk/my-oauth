@@ -1,4 +1,4 @@
-frontend/
 tests/
 .idea/
 sdk/
+frontend/node_modules/
