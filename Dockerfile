@@ -32,7 +32,7 @@ COPY --from=backend-builder /app/backend /app/backend
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 
 # Run backend
-ENTRYPOINT ["/app/backend", "--mode=prod"]
+CMD ["/app/backend", "--mode=prod"]
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
