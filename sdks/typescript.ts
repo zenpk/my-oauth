@@ -3,39 +3,39 @@ import axios from "axios";
 export type ChallengeVerifier = {
     codeChallenge: string;
     codeVerifier: string;
-}
+};
 
 export type LoginReq = {
     clientId: string;
     clientSecret: string;
     redirect: string;
     codeChallenge: string;
-}
+};
 
 export type AuthorizeReq = {
     clientId: string;
     clientSecret: string;
     codeVerifier: string;
     authorizationCode: string;
-}
+};
 
 export type AuthorizeResp = {
     ok: boolean;
     msg: string;
     accessToken: string;
     refreshToken: string;
-}
+};
 
 export type RefreshReq = {
     clientId: string;
     clientSecret: string;
     refreshToken: string;
-}
+};
 
 export type VerifyResp = {
     ok: boolean;
     msg: string;
-}
+};
 
 export type PublicJwk = {
     kty: string;
@@ -44,7 +44,7 @@ export type PublicJwk = {
     kid: string;
     alg: string;
     n: string;
-}
+};
 
 export class MyOAuthSdk {
     endpoint: string;
@@ -61,11 +61,14 @@ export class MyOAuthSdk {
 
         const encoder = new TextEncoder();
         const data = encoder.encode(verifier);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
         const hashArray = new Uint8Array(hashBuffer);
         const challenge = this.arrayToBase64Url(hashArray);
 
-        const challengeVerifier: ChallengeVerifier = {codeChallenge: challenge, codeVerifier: verifier};
+        const challengeVerifier: ChallengeVerifier = {
+            codeChallenge: challenge,
+            codeVerifier: verifier,
+        };
         return challengeVerifier;
     }
 
@@ -74,12 +77,14 @@ export class MyOAuthSdk {
         const clientSecret = this.stringToBase64Url(req.clientSecret);
         const redirect = this.stringToBase64Url(req.redirect);
         const codeChallenge = this.stringToBase64Url(req.codeChallenge);
-        window.location.replace(`${this.endpoint}/login?clientId=${clientId}&clientSecret=${clientSecret}&codeChallenge=${codeChallenge}&redirect=${redirect}`);
+        window.location.replace(
+            `${this.endpoint}/login?clientId=${clientId}&clientSecret=${clientSecret}&codeChallenge=${codeChallenge}&redirect=${redirect}`
+        );
     }
 
     authorize(req: AuthorizeReq): Promise<AuthorizeResp> {
         const urlParams = new URLSearchParams(window.location.search);
-        req.authorizationCode = urlParams.get("authorizationCode");
+        req.authorizationCode = urlParams.get("authorizationCode") ?? "";
         return axios.post(`${this.endpoint}/api/auth/authorize`, req);
     }
 
@@ -88,7 +93,9 @@ export class MyOAuthSdk {
     }
 
     verify(accessToken: string): Promise<VerifyResp> {
-        return axios.post(`${this.endpoint}/api/auth/verify`, {accessToken: accessToken});
+        return axios.post(`${this.endpoint}/api/auth/verify`, {
+            accessToken: accessToken,
+        });
     }
 
     getPublicKey(): Promise<PublicJwk> {
@@ -96,13 +103,14 @@ export class MyOAuthSdk {
     }
 
     arrayToBase64Url(array: Uint8Array) {
-        return this.stringToBase64Url(String.fromCharCode.apply(null, array));
+        let src = "";
+        array.forEach((num) => {
+            src += String.fromCharCode(num);
+        });
+        return this.stringToBase64Url(src);
     }
 
     stringToBase64Url(src: string) {
-        return btoa(src)
-            .replace(/\+/g, "-")
-            .replace(/\//g, "_")
-            .replace(/=+$/, "");
+        return btoa(src).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     }
 }

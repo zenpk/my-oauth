@@ -24,9 +24,9 @@ npm ci
 npm run build
 ```
 
-## Screenshots
+## Screenshot
 
-Coming soon.
+![screenshot](./screenshot.png)
 
 ## API
 
