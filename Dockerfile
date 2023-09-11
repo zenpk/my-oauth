@@ -37,4 +37,4 @@ EXPOSE 80
 CMD "nginx"
 
 # Run backend
-CMD ["/app/backend", "--mode=prod"]
+ENTRYPOINT ["/app/backend", "--mode=prod"]
