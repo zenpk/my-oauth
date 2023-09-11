@@ -31,8 +31,10 @@ COPY --from=backend-builder /app/backend /app/backend
 # Copy built frontend
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 
+EXPOSE 80
+
+# Run Nginx
+CMD "nginx"
+
 # Run backend
 CMD ["/app/backend", "--mode=prod"]
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
