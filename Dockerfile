@@ -20,9 +20,9 @@ RUN npm run build
 FROM nginx:1.21-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY db/client.csv /app/db/client.csv
-COPY db/refresh_token.csv /app/db/refresh_token.csv
-COPY db/user.csv /app/db/user.csv
+COPY db/client.csv ./db/client.csv
+COPY db/refresh_token.csv ./db/refresh_token.csv
+COPY db/user.csv ./db/user.csv
 COPY conf-prod.json ./conf-prod.json
 
 # Copy built backend
