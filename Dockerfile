@@ -17,7 +17,7 @@ RUN npm ci
 RUN npm run build
 
 # Final image with Nginx
-FROM nginx:1.21-alpine AS final
+FROM nginx:1.21-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY db/client.csv /bin/backend/db/client.csv
