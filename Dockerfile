@@ -23,10 +23,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY db/client.csv /app/db/client.csv
 COPY db/refresh_token.csv /app/db/refresh_token.csv
 COPY db/user.csv /app/db/user.csv
-COPY conf-prod.json /app/conf-prod.json
+COPY conf-prod.json ./conf-prod.json
 
 # Copy built backend
-COPY --from=backend-builder /app/backend /app/
+COPY --from=backend-builder /app/backend /app/backend
 
 # Copy built frontend
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html
