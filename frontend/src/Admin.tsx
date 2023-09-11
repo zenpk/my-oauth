@@ -53,7 +53,7 @@ export function Admin() {
         <div>
           <Input
             label={"Admin Password"}
-            inputType={"text"}
+            inputType={"password"}
             myRef={adminPasswordRef}
             enter={saveAdminPassword}
             buttonText={"Save"}
