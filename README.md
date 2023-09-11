@@ -2,7 +2,7 @@
 
 Self-hosted OAuth2.0 implementation, with PKCE support.
 
-Note: this is the side-project of other side-projects.
+Note: This is the side-project of other side-projects.
 
 ## Configuration
 
@@ -12,7 +12,7 @@ Edit `conf-prod.json` file to configure the backend-related settings.
 
 ### Front End
 
-Edit the `BASE` constant in `frontend/src/apis/basic.ts` to point to the actual back end service endpoint.
+Edit the `BASE` constant in `frontend/src/apis/basic.ts` to point to the actual backend service endpoint.
 
 ## Build with Docker
 
@@ -20,6 +20,10 @@ Edit the `BASE` constant in `frontend/src/apis/basic.ts` to point to the actual 
 sudo docker build -t myoauth .
 sudo docker run -dp 20476:80 myoauth
 ```
+
+## Screenshots
+
+Coming soon.
 
 ## API
 
