@@ -34,7 +34,7 @@ COPY --from=frontend-builder /app/dist /usr/share/nginx/html
 EXPOSE 80
 
 # Run Nginx
-CMD "nginx"
+CMD ["nginx", "-g", "daemon off;"]
 
 # Run backend
 ENTRYPOINT ["/app/backend", "--mode=prod"]
