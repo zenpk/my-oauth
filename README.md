@@ -4,7 +4,7 @@ Self-hosted OAuth2.0 implementation, with PKCE support.
 
 Note: This is the side-project of other side-projects.
 
-## Configuration and Build
+## Setup
 
 ### Back End
 
@@ -12,6 +12,7 @@ Edit `conf-prod.json` file to configure the backend-related settings.
 
 ```shell
 go build .
+./myoauth --mode=prod
 ```
 
 ### Front End
@@ -19,6 +20,7 @@ go build .
 Edit the `BASE` constant in `frontend/src/apis/basic.ts` to point to the actual backend service endpoint.
 
 ```shell
+npm ci
 npm run build
 ```
 
