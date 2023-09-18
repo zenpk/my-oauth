@@ -12,13 +12,11 @@ export function Login() {
 
   function login() {
     const clientId = searchParams.get("clientId");
-    const clientSecret = searchParams.get("clientSecret");
     const codeChallenge = searchParams.get("codeChallenge");
     const redirect = searchParams.get("redirect");
     if (
       !(
         clientId &&
-        clientSecret &&
         codeChallenge &&
         redirect &&
         usernameRef.current &&
@@ -34,7 +32,6 @@ export function Login() {
       username: usernameRef.current.value,
       password: passwordRef.current.value,
       clientId: decodeURIComponent(clientId),
-      clientSecret: decodeURIComponent(clientSecret),
       codeChallenge: decodeURIComponent(codeChallenge),
       redirect: decodeURIComponent(redirect),
     };

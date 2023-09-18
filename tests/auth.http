@@ -6,7 +6,6 @@ Content-Type: application/json
   "username": "temp",
   "password": "temp",
   "clientId": "my",
-  "clientSecret": "my",
   "codeChallenge": "plP8aHmykBUgarC_HDHzGmYhnJiipBy69FE8KWoLMqI",
   "redirect": "http://localhost:3000/"
 }

@@ -14,7 +14,6 @@ type loginReq struct {
 	Username      string `json:"username"`
 	Password      string `json:"password"`
 	ClientId      string `json:"clientId"`
-	ClientSecret  string `json:"clientSecret"`
 	CodeChallenge string `json:"codeChallenge"`
 	Redirect      string `json:"redirect"`
 }
@@ -30,15 +29,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w, err)
 		return
 	}
-	if req.Username == "" || req.Password == "" || req.ClientId == "" || req.ClientSecret == "" || req.CodeChallenge == "" || req.Redirect == "" {
+	if req.Username == "" || req.Password == "" || req.ClientId == "" || req.CodeChallenge == "" || req.Redirect == "" {
 		responseInputError(w)
 		return
 	}
-	client, statusCode, err := checkClient(req.ClientId, req.ClientSecret)
-	if err != nil {
-		responseError(w, err, statusCode)
-		return
-	}
+	client, err := db.TableClient.Select(db.ClientId, clientId)
+    if err != nil {
+       responseError(w, err)
+       return
+    }
 	user, err := db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err)

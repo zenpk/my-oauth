@@ -7,7 +7,6 @@ export type ChallengeVerifier = {
 
 export type LoginReq = {
     clientId: string;
-    clientSecret: string;
     redirect: string;
     codeChallenge: string;
 };
@@ -74,11 +73,10 @@ export class MyOAuthSdk {
 
     redirectLogin(req: LoginReq) {
         const clientId = this.stringToBase64Url(req.clientId);
-        const clientSecret = this.stringToBase64Url(req.clientSecret);
         const redirect = this.stringToBase64Url(req.redirect);
         const codeChallenge = this.stringToBase64Url(req.codeChallenge);
         window.location.replace(
-            `${this.endpoint}/login?clientId=${clientId}&clientSecret=${clientSecret}&codeChallenge=${codeChallenge}&redirect=${redirect}`
+            `${this.endpoint}/login?clientId=${clientId}&codeChallenge=${codeChallenge}&redirect=${redirect}`
         );
     }
 

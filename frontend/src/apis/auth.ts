@@ -5,7 +5,6 @@ export type LoginReq = {
   username: string;
   password: string;
   clientId: string;
-  clientSecret: string;
   codeChallenge: string;
   redirect: string;
 };
