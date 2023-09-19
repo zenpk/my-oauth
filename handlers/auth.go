@@ -56,7 +56,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseMsg(w, "incorrect password")
 		return
 	}
-	redirects := strings.Split(client.Redirects, ",")
+	redirects := strings.Split(client.(db.Client).Redirects, ",")
 	redirectValid := false
 	for _, redirect := range redirects {
 		if strings.Trim(redirect, " ") == req.Redirect {
@@ -69,7 +69,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authorizationCode, err := utils.GenAuthorizationCode(utils.AuthorizationInfo{
-		ClientId:      client.Id,
+		ClientId:      client.(db.Client).Id,
 		Uuid:          user.(db.User).Uuid,
 		Username:      user.(db.User).Username,
 		CodeChallenge: req.CodeChallenge,
