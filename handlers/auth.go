@@ -33,7 +33,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	client, err := db.TableClient.Select(db.ClientId, clientId)
+	client, err := db.TableClient.Select(db.ClientId, req.ClientId)
     if err != nil {
        responseError(w, err)
        return
