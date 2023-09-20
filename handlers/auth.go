@@ -34,10 +34,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	client, err := db.TableClient.Select(db.ClientId, req.ClientId)
-    if err != nil {
-       responseError(w, err)
-       return
-    }
+	if err != nil {
+		responseError(w, err)
+		return
+	}
+	if client == nil {
+		responseMsg(w, "client id not found")
+		return
+	}
 	user, err := db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err)
