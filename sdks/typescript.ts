@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 export type ChallengeVerifier = {
     codeChallenge: string;
@@ -45,7 +45,7 @@ export type PublicJwk = {
     n: string;
 };
 
-export class MyOAuthSdk {
+class MyOAuthSdk {
     endpoint: string;
 
     constructor(endpoint: string) {
@@ -80,23 +80,23 @@ export class MyOAuthSdk {
         );
     }
 
-    authorize(req: AuthorizeReq): Promise<AuthorizeResp> {
+    authorize(req: AuthorizeReq): Promise<AxiosResponse<AuthorizeResp>> {
         const urlParams = new URLSearchParams(window.location.search);
         req.authorizationCode = urlParams.get("authorizationCode") ?? "";
         return axios.post(`${this.endpoint}/api/auth/authorize`, req);
     }
 
-    refresh(req: RefreshReq): Promise<AuthorizeResp> {
+    refresh(req: RefreshReq): Promise<AxiosResponse<AuthorizeResp>> {
         return axios.post(`${this.endpoint}/api/auth/refresh`, req);
     }
 
-    verify(accessToken: string): Promise<VerifyResp> {
+    verify(accessToken: string): Promise<AxiosResponse<VerifyResp>> {
         return axios.post(`${this.endpoint}/api/auth/verify`, {
             accessToken: accessToken,
         });
     }
 
-    getPublicKey(): Promise<PublicJwk> {
+    getPublicKey(): Promise<AxiosResponse<PublicJwk>> {
         return axios.get(`${this.endpoint}/api/setup/public-key`);
     }
 
