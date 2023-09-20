@@ -52,7 +52,7 @@ export function Login() {
       {warn && <span className={"warn"}>{warn}</span>}
       <Input label={"Username"} inputType={"text"} myRef={usernameRef} />
       <Input label={"Password"} inputType={"password"} myRef={passwordRef} />
-      <Button text={"Go"} click={login} className={"full-width"} />
+      <Button text={"Go"} click={login} className={"full-width mt-1"} />
     </div>
   );
 }

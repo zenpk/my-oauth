@@ -50,7 +50,7 @@ export function Register() {
             inputType={"password"}
             myRef={passwordRef}
           />
-          <Button text={"Go"} click={register} className={"full-width"} />
+          <Button text={"Go"} click={register} className={"full-width mt-1"} />
         </>
       )}
     </div>
