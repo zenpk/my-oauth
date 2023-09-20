@@ -50,8 +50,18 @@ export function Login() {
     <div className={"card"}>
       <h1>Login with MyOAuth</h1>
       {warn && <span className={"warn"}>{warn}</span>}
-      <Input label={"Username"} inputType={"text"} myRef={usernameRef} />
-      <Input label={"Password"} inputType={"password"} myRef={passwordRef} />
+      <Input
+        label={"Username"}
+        inputType={"text"}
+        myRef={usernameRef}
+        enter={login}
+      />
+      <Input
+        label={"Password"}
+        inputType={"password"}
+        myRef={passwordRef}
+        enter={login}
+      />
       <Button text={"Go"} click={login} className={"full-width mt-1"} />
     </div>
   );

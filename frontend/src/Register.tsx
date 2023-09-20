@@ -44,11 +44,17 @@ export function Register() {
       {info && <span className={"warn black"}>{info}</span>}
       {!info && (
         <>
-          <Input label={"Username"} inputType={"text"} myRef={usernameRef} />
+          <Input
+            label={"Username"}
+            inputType={"text"}
+            myRef={usernameRef}
+            enter={register}
+          />
           <Input
             label={"Password"}
             inputType={"password"}
             myRef={passwordRef}
+            enter={register}
           />
           <Button text={"Go"} click={register} className={"full-width mt-1"} />
         </>
