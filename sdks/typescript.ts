@@ -72,9 +72,9 @@ export class MyOAuthSdk {
     }
 
     redirectLogin(req: LoginReq) {
-        const clientId = this.stringToBase64Url(req.clientId);
-        const redirect = this.stringToBase64Url(req.redirect);
-        const codeChallenge = this.stringToBase64Url(req.codeChallenge);
+        const clientId = encodeURIComponent(req.clientId);
+        const redirect = encodeURIComponent(req.redirect);
+        const codeChallenge = encodeURIComponent(req.codeChallenge);
         window.location.replace(
             `${this.endpoint}/login?clientId=${clientId}&codeChallenge=${codeChallenge}&redirect=${redirect}`
         );
