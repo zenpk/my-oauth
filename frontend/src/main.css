@@ -14,7 +14,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 2rem 4rem;
   max-height: 80%;
   max-width: 100%;
-  width: fit-content;
+  width: max-content;
   border: #cccccc solid 1px;
   border-radius: 0.5rem;
   position: absolute;
