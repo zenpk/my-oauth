@@ -35,7 +35,7 @@ export type RefreshReq = {
 };
 
 export type RefreshResp = {
-    refreshToken: string;
+    accessToken: string;
 } & CommonResp;
 
 
