@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Button } from "./components/Button.tsx";
 import { Input } from "./components/Input.tsx";
 import { registerApi, RegisterReq } from "./apis/setup.ts";
+import NProgress from "nprogress";
 
 export function Register() {
   const [info, setInfo] = useState("");
@@ -12,6 +13,7 @@ export function Register() {
   const [searchParams] = useSearchParams();
 
   function register() {
+    NProgress.start();
     const invitationCode = searchParams.get("invitationCode");
     if (
       !(
@@ -32,9 +34,11 @@ export function Register() {
     };
     registerApi(req, setWarn).then((resp) => {
       if (resp) {
+        NProgress.done();
         setInfo("Register succeeded! You can now close the window.");
       }
     });
+    NProgress.done();
   }
 
   return (

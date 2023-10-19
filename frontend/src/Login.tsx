@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Button } from "./components/Button.tsx";
 import { useSearchParams } from "react-router-dom";
 import { loginApi, LoginReq } from "./apis/auth.ts";
+import NProgress from "nprogress";
 
 export function Login() {
   const [warn, setWarn] = useState("");
@@ -11,6 +12,7 @@ export function Login() {
   const [searchParams] = useSearchParams();
 
   function login() {
+    NProgress.start();
     const clientId = searchParams.get("clientId");
     const codeChallenge = searchParams.get("codeChallenge");
     const redirect = searchParams.get("redirect");
@@ -37,6 +39,7 @@ export function Login() {
     };
     loginApi(req, setWarn).then((resp) => {
       if (resp) {
+        NProgress.done();
         window.location.replace(
           `${decodeURIComponent(redirect)}?authorizationCode=${
             resp.authorizationCode
@@ -44,6 +47,7 @@ export function Login() {
         );
       }
     });
+    NProgress.done();
   }
 
   return (
