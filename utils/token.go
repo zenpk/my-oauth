@@ -72,7 +72,6 @@ func GetAndCleanRefreshToken(refreshToken string) (db.RefreshToken, error) {
 			if err := db.TableRefreshToken.Delete(db.RefreshTokenToken, token.(db.RefreshToken).Token); err != nil {
 				return db.RefreshToken{}, err
 			}
-			continue
 		}
 	}
 	return db.RefreshToken{}, errors.New("no valid refresh token found")
