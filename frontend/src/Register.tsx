@@ -33,12 +33,11 @@ export function Register() {
       invitationCode: invitationCode,
     };
     registerApi(req, setWarn).then((resp) => {
+      NProgress.done();
       if (resp) {
-        NProgress.done();
         setInfo("Register succeeded! You can now close the window.");
       }
     });
-    NProgress.done();
   }
 
   return (

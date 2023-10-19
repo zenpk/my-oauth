@@ -38,8 +38,8 @@ export function Login() {
       redirect: decodeURIComponent(redirect),
     };
     loginApi(req, setWarn).then((resp) => {
+      NProgress.done();
       if (resp) {
-        NProgress.done();
         window.location.replace(
           `${decodeURIComponent(redirect)}?authorizationCode=${
             resp.authorizationCode
@@ -47,7 +47,6 @@ export function Login() {
         );
       }
     });
-    NProgress.done();
   }
 
   return (
