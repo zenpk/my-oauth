@@ -95,7 +95,7 @@ type authorizeReq struct {
 	CodeVerifier      string `json:"codeVerifier"`
 }
 
-type tokenResp struct {
+type authorizeResp struct {
 	commonResp
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
@@ -140,7 +140,7 @@ func authorize(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err)
 		return
 	}
-	responseJson(w, tokenResp{
+	responseJson(w, authorizeResp{
 		commonResp:   genOkResponse(),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -151,6 +151,11 @@ type refreshReq struct {
 	ClientId     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
 	RefreshToken string `json:"refreshToken"`
+}
+
+type refreshResp struct {
+	commonResp
+	AccessToken  string `json:"accessToken"`
 }
 
 func refresh(w http.ResponseWriter, r *http.Request) {
@@ -187,15 +192,9 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err)
 		return
 	}
-	refreshToken, err := utils.GenAndInsertRefreshToken(payload, time.Duration(client.RefreshTokenAge)*time.Hour)
-	if err != nil {
-		responseError(w, err)
-		return
-	}
-	responseJson(w, tokenResp{
+	responseJson(w, refreshResp{
 		commonResp:   genOkResponse(),
 		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
 	})
 }
 

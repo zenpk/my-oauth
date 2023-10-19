@@ -68,18 +68,11 @@ func GetAndCleanRefreshToken(refreshToken string) (db.RefreshToken, error) {
 	}
 	for _, token := range tokens {
 		// delete expired
-		if token.(db.RefreshToken).ExpireTime.After(time.Now()) {
+		if token.(db.RefreshToken).ExpireTime.Before(time.Now()) {
 			if err := db.TableRefreshToken.Delete(db.RefreshTokenToken, token.(db.RefreshToken).Token); err != nil {
 				return db.RefreshToken{}, err
 			}
 			continue
-		}
-		if token.(db.RefreshToken).Token == refreshToken {
-			// also delete this, because a new one will be generated
-			if err := db.TableRefreshToken.Delete(db.RefreshTokenToken, token.(db.RefreshToken).Token); err != nil {
-				return db.RefreshToken{}, err
-			}
-			return token.(db.RefreshToken), nil
 		}
 	}
 	return db.RefreshToken{}, errors.New("no valid refresh token found")

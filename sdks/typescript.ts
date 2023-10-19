@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, {AxiosResponse} from "axios";
 
 export type ChallengeVerifier = {
     codeChallenge: string;
@@ -18,12 +18,15 @@ export type AuthorizeReq = {
     authorizationCode: string;
 };
 
-export type AuthorizeResp = {
+export type CommonResp = {
     ok: boolean;
     msg: string;
+};
+
+export type AuthorizeResp = {
     accessToken: string;
     refreshToken: string;
-};
+} & CommonResp;
 
 export type RefreshReq = {
     clientId: string;
@@ -31,10 +34,10 @@ export type RefreshReq = {
     refreshToken: string;
 };
 
-export type VerifyResp = {
-    ok: boolean;
-    msg: string;
-};
+export type RefreshResp = {
+    refreshToken: string;
+} & CommonResp;
+
 
 export type PublicJwk = {
     kty: string;
@@ -86,11 +89,11 @@ class MyOAuthSdk {
         return axios.post(`${this.endpoint}/api/auth/authorize`, req);
     }
 
-    refresh(req: RefreshReq): Promise<AxiosResponse<AuthorizeResp>> {
+    refresh(req: RefreshReq): Promise<AxiosResponse<RefreshResp>> {
         return axios.post(`${this.endpoint}/api/auth/refresh`, req);
     }
 
-    verify(accessToken: string): Promise<AxiosResponse<VerifyResp>> {
+    verify(accessToken: string): Promise<AxiosResponse<CommonResp>> {
         return axios.post(`${this.endpoint}/api/auth/verify`, {
             accessToken: accessToken,
         });
