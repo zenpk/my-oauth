@@ -86,7 +86,7 @@ type RefreshToken struct {
 	ClientId   string    `json:"clientId"`
 	Uuid       string    `json:"uuid"`
 	Username   string    `json:"username"`
-	ExpireTime time.Time `json:"expireTime"` // UNIX ms
+	ExpireTime time.Time `json:"expireTime"` // UNIX second
 }
 
 func (r RefreshToken) ToRow() ([]string, error) {
@@ -105,10 +105,10 @@ func (r RefreshToken) FromRow(row []string) (scd.RecordType, error) {
 	newRefreshToken.ClientId = row[RefreshTokenClientId]
 	newRefreshToken.Uuid = row[RefreshTokenUuid]
 	newRefreshToken.Username = row[RefreshTokenUsername]
-	milliTime, err := strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
+	secondTime, err := strconv.ParseInt(row[RefreshTokenExpireTime], 10, 64)
 	if err != nil {
 		return nil, err
 	}
-	newRefreshToken.ExpireTime = time.UnixMilli(milliTime)
+	newRefreshToken.ExpireTime = time.UnixMilli(secondTime * 1000)
 	return newRefreshToken, nil
 }
