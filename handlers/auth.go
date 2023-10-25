@@ -23,7 +23,7 @@ type loginResp struct {
 	AuthorizationCode string `json:"authorizationCode"`
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
+func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 	var req loginReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
@@ -33,7 +33,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	client, err := db.TableClient.Select(db.ClientId, req.ClientId)
+	client, err := h.Db.TableClient.Select(db.ClientId, req.ClientId)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -42,7 +42,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		responseMsg(w, "client id not found")
 		return
 	}
-	user, err := db.TableUser.Select(db.UserUsername, req.Username)
+	user, err := h.Db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -101,7 +101,7 @@ type authorizeResp struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func authorize(w http.ResponseWriter, r *http.Request) {
+func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 	var req authorizeReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
@@ -111,7 +111,7 @@ func authorize(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	client, statusCode, err := checkClient(req.ClientId, req.ClientSecret)
+	client, statusCode, err := h.checkClient(req.ClientId, req.ClientSecret)
 	if err != nil {
 		responseError(w, err, statusCode)
 		return
@@ -135,7 +135,7 @@ func authorize(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err)
 		return
 	}
-	refreshToken, err := utils.GenAndInsertRefreshToken(payload, time.Duration(client.RefreshTokenAge)*time.Hour)
+	refreshToken, err := utils.GenAndInsertRefreshToken(h.Db, payload, time.Duration(client.RefreshTokenAge)*time.Hour)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -155,10 +155,10 @@ type refreshReq struct {
 
 type refreshResp struct {
 	commonResp
-	AccessToken  string `json:"accessToken"`
+	AccessToken string `json:"accessToken"`
 }
 
-func refresh(w http.ResponseWriter, r *http.Request) {
+func (h Handler) refresh(w http.ResponseWriter, r *http.Request) {
 	var req refreshReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
@@ -168,12 +168,12 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	client, statusCode, err := checkClient(req.ClientId, req.ClientSecret)
+	client, statusCode, err := h.checkClient(req.ClientId, req.ClientSecret)
 	if err != nil {
 		responseError(w, err, statusCode)
 		return
 	}
-	oldRefreshToken, err := utils.GetAndCleanRefreshToken(req.RefreshToken)
+	oldRefreshToken, err := utils.GetAndCleanRefreshToken(h.Db, req.RefreshToken)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -193,8 +193,8 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	responseJson(w, refreshResp{
-		commonResp:   genOkResponse(),
-		AccessToken:  accessToken,
+		commonResp:  genOkResponse(),
+		AccessToken: accessToken,
 	})
 }
 
@@ -202,7 +202,7 @@ type checkReq struct {
 	AccessToken string `json:"accessToken"`
 }
 
-func verify(w http.ResponseWriter, r *http.Request) {
+func (h Handler) verify(w http.ResponseWriter, r *http.Request) {
 	var req checkReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
@@ -219,8 +219,8 @@ func verify(w http.ResponseWriter, r *http.Request) {
 	responseOk(w)
 }
 
-func checkClient(clientId, clientSecret string) (db.Client, int, error) {
-	client, err := db.TableClient.Select(db.ClientId, clientId)
+func (h Handler) checkClient(clientId, clientSecret string) (db.Client, int, error) {
+	client, err := h.Db.TableClient.Select(db.ClientId, clientId)
 	if err != nil {
 		return db.Client{}, http.StatusInternalServerError, err
 	}

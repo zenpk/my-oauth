@@ -14,7 +14,7 @@ type registerReq struct {
 	InvitationCode string `json:"invitationCode"`
 }
 
-func register(w http.ResponseWriter, r *http.Request) {
+func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 	var req registerReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
@@ -28,7 +28,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	res, err := db.TableUser.Select(db.UserUsername, req.Username)
+	res, err := h.Db.TableUser.Select(db.UserUsername, req.Username)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -47,7 +47,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		Username: req.Username,
 		Password: passwordHash,
 	}
-	if err := db.TableUser.Insert(user); err != nil {
+	if err := h.Db.TableUser.Insert(user); err != nil {
 		responseError(w, err)
 		return
 	}
@@ -66,8 +66,8 @@ type clientListResp struct {
 	Clients []clientWithoutSecret `json:"clients"`
 }
 
-func clientList(w http.ResponseWriter, r *http.Request) {
-	clients, err := db.TableClient.All()
+func (h Handler) clientList(w http.ResponseWriter, r *http.Request) {
+	clients, err := h.Db.TableClient.All()
 	if err != nil {
 		responseError(w, err)
 		return
@@ -93,7 +93,7 @@ type clientCreateReq struct {
 	AdminPassword string `json:"adminPassword"`
 }
 
-func clientCreate(w http.ResponseWriter, r *http.Request) {
+func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 	var req clientCreateReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
@@ -116,7 +116,7 @@ func clientCreate(w http.ResponseWriter, r *http.Request) {
 		responseMsg(w, "incorrect admin password")
 		return
 	}
-	oldClient, err := db.TableClient.Select(db.ClientId, req.Id)
+	oldClient, err := h.Db.TableClient.Select(db.ClientId, req.Id)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -131,7 +131,7 @@ func clientCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Secret = hashedSecret
-	if err := db.TableClient.Insert(req.Client); err != nil {
+	if err := h.Db.TableClient.Insert(req.Client); err != nil {
 		responseError(w, err)
 		return
 	}
@@ -143,7 +143,7 @@ type clientDeleteReq struct {
 	AdminPassword string `json:"adminPassword"`
 }
 
-func clientDelete(w http.ResponseWriter, r *http.Request) {
+func (h Handler) clientDelete(w http.ResponseWriter, r *http.Request) {
 	var req clientDeleteReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
@@ -162,13 +162,13 @@ func clientDelete(w http.ResponseWriter, r *http.Request) {
 		responseMsg(w, "incorrect admin password")
 		return
 	}
-	if err := db.TableClient.Delete(db.ClientId, req.Id); err != nil {
+	if err := h.Db.TableClient.Delete(db.ClientId, req.Id); err != nil {
 		responseError(w, err)
 		return
 	}
 	responseOk(w)
 }
 
-func publicKey(w http.ResponseWriter, r *http.Request) {
+func (h Handler) publicKey(w http.ResponseWriter, r *http.Request) {
 	responseJson(w, utils.Conf.JwtPublicKey)
 }

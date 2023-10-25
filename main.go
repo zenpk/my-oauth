@@ -24,8 +24,9 @@ func main() {
 	done := make(chan struct{})
 	prepared := make(chan struct{})
 	exited := make(chan struct{})
+	dbInstance := new(db.Db)
 	go func() {
-		if err := db.Init(prepared, done); err != nil {
+		if err := dbInstance.Init(prepared, done); err != nil {
 			panic(err)
 		}
 		exited <- struct{}{}
@@ -43,7 +44,8 @@ func main() {
 		os.Exit(0)
 	}()
 
-	if err := handlers.StartListening(); err != nil {
+	handlerInstance := handlers.Handler{Db: dbInstance}
+	if err := handlers.StartListening(handlerInstance); err != nil {
 		panic(err)
 	}
 }
