@@ -13,7 +13,6 @@ export function Register() {
   const [searchParams] = useSearchParams();
 
   function register() {
-    NProgress.configure({ parent: "card" });
     NProgress.start();
     const invitationCode = searchParams.get("invitationCode");
     if (

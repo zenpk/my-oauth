@@ -12,7 +12,6 @@ export function Login() {
   const [searchParams] = useSearchParams();
 
   function login() {
-    NProgress.configure({ parent: "card" });
     NProgress.start();
     const clientId = searchParams.get("clientId");
     const codeChallenge = searchParams.get("codeChallenge");
