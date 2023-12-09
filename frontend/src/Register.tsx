@@ -13,7 +13,7 @@ export function Register() {
   const [searchParams] = useSearchParams();
 
   function register() {
-    NProgress.configure({ parent: "container" });
+    NProgress.configure({ parent: "card" });
     NProgress.start();
     const invitationCode = searchParams.get("invitationCode");
     if (
@@ -42,7 +42,7 @@ export function Register() {
   }
 
   return (
-    <div id={"container"} className={"card"}>
+    <div id={"card"} className={"card"}>
       <h1>Register MyOAuth</h1>
       {warn && <span className={"warn"}>{warn}</span>}
       {info && <span className={"warn black"}>{info}</span>}

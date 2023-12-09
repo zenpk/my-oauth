@@ -12,7 +12,7 @@ export function Login() {
   const [searchParams] = useSearchParams();
 
   function login() {
-    NProgress.configure({ parent: "container" });
+    NProgress.configure({ parent: "card" });
     NProgress.start();
     const clientId = searchParams.get("clientId");
     const codeChallenge = searchParams.get("codeChallenge");
@@ -51,7 +51,7 @@ export function Login() {
   }
 
   return (
-    <div id={"container"} className={"card"}>
+    <div id={"card"} className={"card"}>
       <h1>Login with MyOAuth</h1>
       {warn && <span className={"warn"}>{warn}</span>}
       <Input
