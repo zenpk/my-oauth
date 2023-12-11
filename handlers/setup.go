@@ -6,6 +6,7 @@ import (
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/utils"
 	"net/http"
+	"strconv"
 )
 
 type registerReq struct {
@@ -26,6 +27,10 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Username == "" || req.Password == "" {
 		responseInputError(w)
+		return
+	}
+	if len(req.Password) < utils.Conf.PasswordMinLength {
+		responseMsg(w, "the password should be at least "+strconv.Itoa(utils.Conf.PasswordMinLength)+" characters long")
 		return
 	}
 	res, err := h.Db.TableUser.Select(db.UserUsername, req.Username)
