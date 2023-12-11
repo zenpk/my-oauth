@@ -5,6 +5,7 @@
   "AuthorizationCodeLength": 128,
   "RefreshTokenLength": 128,
   "PasswordMinLength": 8,
+  "LogFilePath": "my-oauth.log",
   "JwtIssuer": "demo",
   "JwtPrivateKey": {
     "p": "z_DIr92Q_xHDTEhkGScZLHDOvfOszXTSDYI6lzqPVoRxNsP0fG1BbQUxqU8PkGWmWlYeZfxHqQRbQ5pwYywm6lY_sG7LVmblhTcdKKneSRiTpm9s2XV6pz8VQAbJB0mLonfHSMhi6RoSEGp56KI0p7-jaxTyXjTLQOKIPOH5g6c",

@@ -13,6 +13,7 @@ type Configuration struct {
 	AuthorizationCodeLength int                    `json:"AuthorizationCodeLength"`
 	RefreshTokenLength      int                    `json:"RefreshTokenLength"`
 	PasswordMinLength       int                    `json:"PasswordMinLength"`
+	LogFilePath             string                 `json:"LogFilePath"`
 	JwtIssuer               string                 `json:"JwtIssuer"`
 	JwtPrivateKey           map[string]interface{} `json:"JwtPrivateKey"`
 	JwtPublicKey            map[string]interface{} `json:"JwtPublicKey"`

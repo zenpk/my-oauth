@@ -21,6 +21,13 @@ func main() {
 		panic(err)
 	}
 
+	logFile, err := os.OpenFile(utils.Conf.LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
 	done := make(chan struct{})
 	prepared := make(chan struct{})
 	exited := make(chan struct{})
