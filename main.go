@@ -28,25 +28,25 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	done := make(chan struct{})
-	prepared := make(chan struct{})
-	exited := make(chan struct{})
+	stop := make(chan struct{})
+	preparing := make(chan struct{})
+	dbRunning := make(chan struct{})
 	dbInstance := new(db.Db)
 	go func() {
-		if err := dbInstance.Init(prepared, done); err != nil {
+		if err := dbInstance.Init(preparing, stop); err != nil {
 			panic(err)
 		}
-		exited <- struct{}{}
+		close(dbRunning)
 	}()
-	<-prepared
+	<-preparing
 
 	// clean up
 	osSignalChan := make(chan os.Signal, 2)
 	signal.Notify(osSignalChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-osSignalChan
-		done <- struct{}{}
-		<-exited
+		close(stop)
+		<-dbRunning
 		log.Println("gracefully exited")
 		os.Exit(0)
 	}()

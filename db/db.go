@@ -10,7 +10,7 @@ type Db struct {
 	TableClient       *scd.Table
 }
 
-func (d *Db) Init(prepared, done chan struct{}) error {
+func (d *Db) Init(preparing chan<- struct{}, stop <-chan struct{}) error {
 	var err error
 
 	d.TableUser, err = scd.OpenTable("./db/user.csv", User{})
@@ -46,7 +46,7 @@ func (d *Db) Init(prepared, done chan struct{}) error {
 		}
 	}()
 
-	prepared <- struct{}{}
-	<-done
+	close(preparing)
+	<-stop
 	return nil
 }
