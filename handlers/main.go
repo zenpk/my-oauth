@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func StartListening(h Handler) error {
+func CreateServer(h Handler) *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/setup/register", middlewares(http.MethodPost, h.register))
 	mux.Handle("/setup/client-list", middlewares(http.MethodGet, h.clientList))
@@ -18,8 +18,10 @@ func StartListening(h Handler) error {
 	mux.Handle("/auth/authorize", middlewares(http.MethodPost, h.authorize))
 	mux.Handle("/auth/refresh", middlewares(http.MethodPost, h.refresh))
 	mux.Handle("/auth/verify", middlewares(http.MethodPost, h.verify))
-	log.Printf("start listening at %v\n", utils.Conf.HttpAddress)
-	return http.ListenAndServe(utils.Conf.HttpAddress, mux)
+	return &http.Server{
+		Addr:    utils.Conf.HttpAddress,
+		Handler: mux,
+	}
 }
 
 func middlewares(method string, handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
