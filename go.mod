@@ -3,10 +3,10 @@ module github.com/zenpk/my-oauth
 go 1.20
 
 require (
-	github.com/google/uuid v1.5.0
-	github.com/lestrrat-go/jwx/v2 v2.0.18
-	github.com/zenpk/safe-csv-db v1.4.0
-	golang.org/x/crypto v0.17.0
+	github.com/google/uuid v1.6.0
+	github.com/lestrrat-go/jwx/v2 v2.0.19
+	github.com/zenpk/safe-csv-db v1.5.0
+	golang.org/x/crypto v0.18.0
 )
 
 require (
