@@ -23,12 +23,10 @@ var (
 func main() {
 	flag.Parse()
 	// graceful exit
-	var cleanUpErrors []error
+	var cleanUpErr error
 	defer func() {
-		for _, err := range cleanUpErrors {
-			if err != nil {
-				panic(err)
-			}
+		if cleanUpErr != nil {
+			panic(cleanUpErr)
 		}
 		fmt.Println("gracefully exited") // need to use fmt because at this point the logFile is already closed
 	}()
@@ -45,7 +43,7 @@ func main() {
 	defer func() {
 		log.Println("exiting")
 		if err := logFile.Close(); err != nil {
-			cleanUpErrors = append(cleanUpErrors, err)
+			cleanUpErr = errors.Join(cleanUpErr, err)
 		}
 	}()
 
