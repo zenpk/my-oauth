@@ -1,18 +1,45 @@
-package utils
+package token
 
 import (
-	"errors"
-	"fmt"
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwt"
-	"github.com/zenpk/my-oauth/db"
-	"time"
+	"github.com/cristalhq/jwt/v5"
+	"github.com/zenpk/my-oauth/utils"
 )
 
-type Payload struct {
+type Token struct {
+	conf *utils.Configuration
+}
+
+type Claim struct {
+	jwt.RegisteredClaims
 	Uuid     string
 	Username string
 	ClientId string
+}
+
+func (t *Token) Init(conf *utils.Configuration){
+	t.conf = conf
+}
+
+func mainn() {
+	// create a Signer (HMAC in this example)
+	key := []byte(`secret`)
+	signer, err := jwt.NewSignerRS(jwt.RS256, key)
+
+	// create claims (you can create your own, see: ExampleBuilder_withUserClaims)
+	claims := &jwt.RegisteredClaims{
+		Audience: []string{"admin"},
+		ID:       "random-unique-string",
+	}
+
+	// create a Builder
+	builder := jwt.NewBuilder(signer)
+
+	// and build a Token
+	token, err := builder.Build(claims)
+	checkErr(err)
+
+	// here is token as a string
+	var _ string = token.String()
 }
 
 func GenerateJwt(payload Payload, tokenAge time.Duration) (string, error) {

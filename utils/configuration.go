@@ -2,8 +2,9 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/lestrrat-go/jwx/v2/jwk"
 	"os"
+
+	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
 type Configuration struct {
@@ -22,29 +23,25 @@ type Configuration struct {
 	ParsedJwtPublicKey  jwk.Key `json:"-"`
 }
 
-var Conf Configuration
-
-func Init(mode string) error {
+func (c *Configuration) Init(mode string) error {
 	filename := "conf-" + mode + ".json"
 	confJson, err := os.ReadFile("./" + filename)
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(confJson, &Conf); err != nil {
+	if err := json.Unmarshal(confJson, &c); err != nil {
 		return err
 	}
 
-	AuthorizationCodeMap = make(map[string]AuthorizationInfo, 0)
-
-	privateKeyByte, err := json.Marshal(Conf.JwtPrivateKey)
+	privateKeyByte, err := json.Marshal(c.JwtPrivateKey)
 	if err != nil {
 		return err
 	}
-	Conf.ParsedJwtPrivateKey, err = jwk.ParseKey(privateKeyByte)
+	c.ParsedJwtPrivateKey, err = jwk.ParseKey(privateKeyByte)
 	if err != nil {
 		return err
 	}
-	Conf.ParsedJwtPublicKey, err = jwk.PublicKeyOf(Conf.ParsedJwtPrivateKey)
+	c.ParsedJwtPublicKey, err = jwk.PublicKeyOf(c.ParsedJwtPrivateKey)
 	if err != nil {
 		return err
 	}
