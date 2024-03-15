@@ -3,11 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/zenpk/my-oauth/db"
-	"github.com/zenpk/my-oauth/utils"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/zenpk/my-oauth/db"
+	"github.com/zenpk/my-oauth/utils"
 )
 
 type loginReq struct {
@@ -130,7 +131,7 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 		Username: info.Username,
 		ClientId: client.Id,
 	}
-	accessToken, err := utils.GenerateJwt(payload, time.Duration(client.RefreshTokenAge)*time.Hour)
+	accessToken, err := utils.GenerateJwt(payload, time.Duration(client.AccessTokenAge)*time.Hour)
 	if err != nil {
 		responseError(w, err)
 		return
