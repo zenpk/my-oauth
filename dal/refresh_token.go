@@ -10,6 +10,7 @@ type IRefreshToken interface {
 	Init() error
 	Insert(token *RefreshToken) error
 	SelectByToken(token string) (*RefreshToken, error)
+	CleanExpired() error
 	DeleteById(id int64) error
 }
 
@@ -82,6 +83,12 @@ func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, e
 		return nil, nil
 	}
 	return refreshToken, err
+}
+
+func (r RefreshToken) CleanExpired() error {
+	timeNow := time.Now().Unix()
+	_, err := r.db.Exec("UPDATE refresh_tokens SET deleted = 1 WHERE expire_time < ?;", timeNow)
+	return err
 }
 
 func (r RefreshToken) DeleteById(id int64) error {

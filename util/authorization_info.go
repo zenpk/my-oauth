@@ -7,9 +7,8 @@ import (
 )
 
 type AuthorizationInfo struct {
-	ClientId             string
-	Uuid                 string
-	Username             string
+	ClientId             int64
+	UserId               int64
 	CodeChallenge        string
 	conf                 *Configuration
 	authorizationCodeMap map[string]*AuthorizationInfo

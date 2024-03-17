@@ -7,18 +7,32 @@ import (
 	"net/http"
 
 	"github.com/zenpk/my-oauth/dal"
+	"github.com/zenpk/my-oauth/service"
+	"github.com/zenpk/my-oauth/token"
 	"github.com/zenpk/my-oauth/util"
 )
 
 type Handler struct {
-	db      *dal.Database
-	conf    *util.Configuration
-	server  *http.Server
-	service IService
+	server *http.Server
+	db     *dal.Database
+	conf   *util.Configuration
+	logger util.ILogger
+	// TODO sv       service.IService
+	sv       *service.Service
+	authInfo *util.AuthorizationInfo
+	// TODO tk     token.IToken
+	tk *token.Token
 }
 
-func (h *Handler) Init(conf *util.Configuration) error {
+func (h *Handler) Init(conf *util.Configuration, logger *util.Logger, sv *service.Service, authInfo *util.AuthorizationInfo, tk *token.Token) {
 	h.conf = conf
+	h.logger = logger
+	h.sv = sv
+	h.authInfo = authInfo
+	h.tk = tk
+}
+
+func (h *Handler) ListenAndServe() error {
 	mux := http.NewServeMux()
 	mux.Handle("/setup/register", middlewares(http.MethodPost, h.register))
 	mux.Handle("/setup/client-list", middlewares(http.MethodGet, h.clientList))
@@ -33,6 +47,7 @@ func (h *Handler) Init(conf *util.Configuration) error {
 		Addr:    h.conf.HttpAddress,
 		Handler: mux,
 	}
+	h.logger.Printf("start listening at %v\n", h.server.Addr)
 	return h.server.ListenAndServe()
 }
 
