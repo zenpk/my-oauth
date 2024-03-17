@@ -5,20 +5,19 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/zenpk/my-oauth/db"
-	"github.com/zenpk/my-oauth/handlers"
-	"github.com/zenpk/my-oauth/utils"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/zenpk/my-oauth/dal"
+	"github.com/zenpk/my-oauth/handlers"
+	"github.com/zenpk/my-oauth/utils"
 )
 
-var (
-	mode = flag.String("mode", "dev", "define program mode")
-)
+var mode = flag.String("mode", "dev", "define program mode")
 
 func main() {
 	flag.Parse()
@@ -31,11 +30,12 @@ func main() {
 		fmt.Println("gracefully exited") // need to use fmt because at this point the logFile is already closed
 	}()
 
-	if err := utils.Init(*mode); err != nil {
+	conf := new(utils.Configuration)
+	if err := conf.Init(*mode); err != nil {
 		panic(err)
 	}
 
-	logFile, err := os.OpenFile(utils.Conf.LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(conf.LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
@@ -50,9 +50,9 @@ func main() {
 	stop := make(chan struct{})
 	preparing := make(chan struct{})
 	dbRunning := make(chan struct{})
-	dbInstance := new(db.Db)
+	db := new(dal.Db)
 	go func() {
-		if err := dbInstance.Init(preparing, stop); err != nil {
+		if err := db.Init(preparing, stop); err != nil {
 			panic(err)
 		}
 		close(dbRunning)
@@ -63,7 +63,7 @@ func main() {
 	osSignalChan := make(chan os.Signal, 2)
 	signal.Notify(osSignalChan, os.Interrupt, syscall.SIGTERM)
 
-	handlerInstance := handlers.Handler{Db: dbInstance}
+	handlerInstance := handlers.Handler{Db: db}
 	server := handlers.CreateServer(handlerInstance)
 
 	go func() {

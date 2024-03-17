@@ -1,4 +1,4 @@
-package utils
+package util
 
 import (
 	"crypto/sha256"
@@ -11,12 +11,17 @@ type AuthorizationInfo struct {
 	Uuid                 string
 	Username             string
 	CodeChallenge        string
-	Conf                 *Configuration
+	conf                 *Configuration
 	authorizationCodeMap map[string]*AuthorizationInfo
 }
 
+func (a *AuthorizationInfo) Init(conf *Configuration) {
+	a.conf = conf
+	a.authorizationCodeMap = make(map[string]*AuthorizationInfo)
+}
+
 func (a *AuthorizationInfo) GenAuthorizationCode(info *AuthorizationInfo) (string, error) {
-	code, err := RandString(a.Conf.AuthorizationCodeLength)
+	code, err := RandString(a.conf.AuthorizationCodeLength)
 	if err != nil {
 		return "", err
 	}
