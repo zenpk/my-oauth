@@ -63,11 +63,6 @@ func main() {
 
 	hd := new(handler.Handler)
 	hd.Init(conf, logger, service, authInfo, tk)
-	go func() {
-		if err := hd.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			panic(err)
-		}
-	}()
 
 	// clean up
 	osSignalChan := make(chan os.Signal, 2)
@@ -83,4 +78,7 @@ func main() {
 	}()
 
 	log.Println("started")
+	if err := hd.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		panic(err)
+	}
 }
