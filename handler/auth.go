@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zenpk/my-oauth/db"
+	"github.com/zenpk/my-oauth/dal"
 	"github.com/zenpk/my-oauth/utils"
 )
 

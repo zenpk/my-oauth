@@ -1,12 +1,9 @@
-package handlers
+package handler
 
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/zenpk/my-oauth/db"
 )
-
 
 type commonResp struct {
 	Ok  bool   `json:"ok"`

@@ -1,19 +1,24 @@
-package handlers
+package handler
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/zenpk/my-oauth/utils"
+	"github.com/zenpk/my-oauth/dal"
+	"github.com/zenpk/my-oauth/util"
 )
 
 type Handler struct {
-	db *dal.Db
+	db      *dal.Database
+	conf    *util.Configuration
+	server  *http.Server
 	service IService
 }
 
-func CreateServer(h Handler) *http.Server {
+func (h *Handler) Init(conf *util.Configuration) error {
+	h.conf = conf
 	mux := http.NewServeMux()
 	mux.Handle("/setup/register", middlewares(http.MethodPost, h.register))
 	mux.Handle("/setup/client-list", middlewares(http.MethodGet, h.clientList))
@@ -24,10 +29,15 @@ func CreateServer(h Handler) *http.Server {
 	mux.Handle("/auth/authorize", middlewares(http.MethodPost, h.authorize))
 	mux.Handle("/auth/refresh", middlewares(http.MethodPost, h.refresh))
 	mux.Handle("/auth/verify", middlewares(http.MethodPost, h.verify))
-	return &http.Server{
-		Addr:    utils.Conf.HttpAddress,
+	h.server = &http.Server{
+		Addr:    h.conf.HttpAddress,
 		Handler: mux,
 	}
+	return h.server.ListenAndServe()
+}
+
+func (h *Handler) Shutdown(ctx context.Context) error {
+	return h.server.Shutdown(ctx)
 }
 
 func middlewares(method string, handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
