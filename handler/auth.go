@@ -40,7 +40,7 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if client == nil {
-		responseMsg(w, "client id not found")
+		responseErrMsg(w, "client id not found")
 		return
 	}
 	user, err := h.Db.TableUser.Select(db.UserUsername, req.Username)
@@ -49,7 +49,7 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user == nil {
-		responseMsg(w, "username doesn't exist")
+		responseErrMsg(w, "username doesn't exist")
 		return
 	}
 	passwordMatch, err := utils.BCryptHashCheck(user.(db.User).Password, req.Password)
@@ -58,7 +58,7 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !passwordMatch {
-		responseMsg(w, "incorrect password")
+		responseErrMsg(w, "incorrect password")
 		return
 	}
 	redirects := strings.Split(client.(db.Client).Redirects, ",")
@@ -70,7 +70,7 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !redirectValid {
-		responseMsg(w, "invalid redirect uri")
+		responseErrMsg(w, "invalid redirect uri")
 		return
 	}
 	authorizationCode, err := utils.GenAuthorizationCode(utils.AuthorizationInfo{
@@ -119,11 +119,11 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 	}
 	info, err := utils.VerifyAuthorizationCode(req.AuthorizationCode, req.CodeVerifier)
 	if err != nil {
-		responseMsg(w, err.Error())
+		responseErrMsg(w, err.Error())
 		return
 	}
 	if info.ClientId != client.Id {
-		responseMsg(w, "client id not match")
+		responseErrMsg(w, "client id not match")
 		return
 	}
 	payload := utils.Payload{
@@ -180,7 +180,7 @@ func (h Handler) refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if oldRefreshToken.ClientId != client.Id {
-		responseMsg(w, "client id not match")
+		responseErrMsg(w, "client id not match")
 		return
 	}
 	payload := utils.Payload{

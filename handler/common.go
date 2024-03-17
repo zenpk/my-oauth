@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/zenpk/my-oauth/db"
 	"net/http"
+
+	"github.com/zenpk/my-oauth/db"
 )
 
-type Handler struct {
-	Db *db.Db
-}
 
 type commonResp struct {
 	Ok  bool   `json:"ok"`
@@ -34,7 +32,7 @@ func responseOk(w http.ResponseWriter) {
 	})
 }
 
-func responseMsg(w http.ResponseWriter, msg string) {
+func responseErrMsg(w http.ResponseWriter, msg string) {
 	responseJson(w, commonResp{
 		Ok:  false,
 		Msg: msg,

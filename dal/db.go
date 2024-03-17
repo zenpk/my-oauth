@@ -8,7 +8,7 @@ import (
 )
 
 type Database struct {
-	Instance      *sql.DB
+	instance      *sql.DB
 	Users         IUser
 	RefreshTokens IRefreshToken
 	Clients       IClient
@@ -31,9 +31,13 @@ func (d *Database) Init(conf *util.Configuration) error {
 	if err := clients.Init(); err != nil {
 		return err
 	}
-	d.Instance = sqlite
+	d.instance = sqlite
 	d.Users = users
 	d.RefreshTokens = refreshTokens
 	d.Clients = clients
 	return nil
+}
+
+func (d *Database) Close() error {
+	return d.instance.Close()
 }

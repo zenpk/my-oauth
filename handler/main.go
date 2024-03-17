@@ -2,10 +2,16 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/zenpk/my-oauth/utils"
 	"log"
 	"net/http"
+
+	"github.com/zenpk/my-oauth/utils"
 )
+
+type Handler struct {
+	db *dal.Db
+	service IService
+}
 
 func CreateServer(h Handler) *http.Server {
 	mux := http.NewServeMux()

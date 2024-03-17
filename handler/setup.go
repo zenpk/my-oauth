@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"github.com/google/uuid"
 	"github.com/zenpk/my-oauth/db"
 	"github.com/zenpk/my-oauth/utils"
-	"net/http"
-	"strconv"
 )
 
 type registerReq struct {
@@ -22,7 +23,7 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.InvitationCode != utils.Conf.InvitationCode {
-		responseMsg(w, "sorry, you need an invitation code or the code is incorrect")
+		responseErrMsg(w, "sorry, you need an invitation code or the code is incorrect")
 		return
 	}
 	if req.Username == "" || req.Password == "" {
@@ -30,7 +31,7 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(req.Password) < utils.Conf.PasswordMinLength {
-		responseMsg(w, "the password should be at least "+strconv.Itoa(utils.Conf.PasswordMinLength)+" characters long")
+		responseErrMsg(w, "the password should be at least "+strconv.Itoa(utils.Conf.PasswordMinLength)+" characters long")
 		return
 	}
 	res, err := h.Db.TableUser.Select(db.UserUsername, req.Username)
@@ -39,7 +40,7 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if res != nil {
-		responseMsg(w, "user already exists")
+		responseErrMsg(w, "user already exists")
 		return
 	}
 	passwordHash, err := utils.BCryptPassword(req.Password)
@@ -109,7 +110,7 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.RefreshTokenAge <= req.AccessTokenAge {
-		responseMsg(w, "refresh token age should be longer than access token age")
+		responseErrMsg(w, "refresh token age should be longer than access token age")
 		return
 	}
 	passwordMatch, err := utils.BCryptHashCheck(utils.Conf.AdminPassword, req.AdminPassword)
@@ -118,7 +119,7 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !passwordMatch {
-		responseMsg(w, "incorrect admin password")
+		responseErrMsg(w, "incorrect admin password")
 		return
 	}
 	oldClient, err := h.Db.TableClient.Select(db.ClientId, req.Id)
@@ -127,7 +128,7 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if oldClient != nil {
-		responseMsg(w, "client id already exists")
+		responseErrMsg(w, "client id already exists")
 		return
 	}
 	hashedSecret, err := utils.BCryptPassword(req.Secret)
@@ -164,7 +165,7 @@ func (h Handler) clientDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !passwordMatch {
-		responseMsg(w, "incorrect admin password")
+		responseErrMsg(w, "incorrect admin password")
 		return
 	}
 	if err := h.Db.TableClient.Delete(db.ClientId, req.Id); err != nil {
