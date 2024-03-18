@@ -29,7 +29,7 @@ func (c Client) Init() error {
 	if _, err := c.db.Exec(`
 	CREATE TABLE IF NOT EXISTS clients (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
-	    client_id TEXT NOT NULL UNIQUE,
+	    client_id TEXT NOT NULL,
 	    secret TEXT NOT NULL,
 	    redirects TEXT NOT NULL,
 	    access_token_age INTEGER NOT NULL,
@@ -43,7 +43,7 @@ func (c Client) Init() error {
 		return err
 	}
 	if !rows.Next() {
-		if _, err = c.db.Exec(`CREATE UNIQUE INDEX idx_client_id ON clients(client_id);`); err != nil {
+		if _, err = c.db.Exec(`CREATE INDEX idx_client_id ON clients(client_id);`); err != nil {
 			return err
 		}
 	}

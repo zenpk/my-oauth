@@ -28,7 +28,7 @@ func (r RefreshToken) Init() error {
 	if _, err := r.db.Exec(`
 	CREATE TABLE IF NOT EXISTS refresh_tokens (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
-	    token TEXT NOT NULL UNIQUE,
+	    token TEXT NOT NULL,
 	    client_id INTEGER NOT NULL,
 	    user_id INTEGER NOT NULL,
 		expire_time INTEGER NOT NULL,
@@ -42,7 +42,7 @@ func (r RefreshToken) Init() error {
 		return err
 	}
 	if !rows.Next() {
-		if _, err = r.db.Exec(`CREATE UNIQUE INDEX idx_token ON refresh_tokens(token);`); err != nil {
+		if _, err = r.db.Exec(`CREATE INDEX idx_token ON refresh_tokens(token);`); err != nil {
 			return err
 		}
 	}
