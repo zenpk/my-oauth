@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/zenpk/my-oauth/dal"
@@ -35,15 +34,15 @@ func (h *Handler) Init(conf *util.Configuration, logger *util.Logger, db *dal.Da
 
 func (h *Handler) ListenAndServe() error {
 	mux := http.NewServeMux()
-	mux.Handle("/setup/register", middlewares(http.MethodPost, h.register))
-	mux.Handle("/setup/client-list", middlewares(http.MethodGet, h.clientList))
-	mux.Handle("/setup/client-create", middlewares(http.MethodPost, h.clientCreate))
-	mux.Handle("/setup/client-delete", middlewares(http.MethodDelete, h.clientDelete))
-	mux.Handle("/setup/public-key", middlewares(http.MethodGet, h.publicKey))
-	mux.Handle("/auth/login", middlewares(http.MethodPost, h.login))
-	mux.Handle("/auth/authorize", middlewares(http.MethodPost, h.authorize))
-	mux.Handle("/auth/refresh", middlewares(http.MethodPost, h.refresh))
-	mux.Handle("/auth/verify", middlewares(http.MethodPost, h.verify))
+	mux.Handle("/setup/register", h.middlewares(http.MethodPost, h.register))
+	mux.Handle("/setup/client-list", h.middlewares(http.MethodGet, h.clientList))
+	mux.Handle("/setup/client-create", h.middlewares(http.MethodPost, h.clientCreate))
+	mux.Handle("/setup/client-delete", h.middlewares(http.MethodDelete, h.clientDelete))
+	mux.Handle("/setup/public-key", h.middlewares(http.MethodGet, h.publicKey))
+	mux.Handle("/auth/login", h.middlewares(http.MethodPost, h.login))
+	mux.Handle("/auth/authorize", h.middlewares(http.MethodPost, h.authorize))
+	mux.Handle("/auth/refresh", h.middlewares(http.MethodPost, h.refresh))
+	mux.Handle("/auth/verify", h.middlewares(http.MethodPost, h.verify))
 	h.server = &http.Server{
 		Addr:    h.conf.HttpAddress,
 		Handler: mux,
@@ -56,8 +55,8 @@ func (h *Handler) Shutdown(ctx context.Context) error {
 	return h.server.Shutdown(ctx)
 }
 
-func middlewares(method string, handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
-	return logMiddleware(corsMiddleware(methodMiddleware(method, http.HandlerFunc(handler))))
+func (h *Handler) middlewares(method string, handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
+	return h.logMiddleware(h.corsMiddleware(h.methodMiddleware(method, http.HandlerFunc(handler))))
 }
 
 type statusResponseWriter struct {
@@ -70,7 +69,7 @@ func (s *statusResponseWriter) WriteHeader(statusCode int) {
 	s.ResponseWriter.WriteHeader(statusCode)
 }
 
-func logMiddleware(next http.Handler) http.Handler {
+func (h *Handler) logMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sw := &statusResponseWriter{
 			w,
@@ -86,11 +85,11 @@ func logMiddleware(next http.Handler) http.Handler {
 		if ipAddress == "" {
 			ipAddress = r.RemoteAddr
 		}
-		log.Printf("| %v | %-7s | %v | %v\n", sw.statusCode, r.Method, r.URL.Path, ipAddress)
+		h.logger.Printf("| %v | %-7s | %v | %v\n", sw.statusCode, r.Method, r.URL.Path, ipAddress)
 	})
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func (h *Handler) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE")
@@ -104,7 +103,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func methodMiddleware(method string, next http.Handler) http.Handler {
+func (h *Handler) methodMiddleware(method string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != method {
 			data := commonResp{
