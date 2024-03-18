@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/zenpk/my-oauth/dal"
 	"github.com/zenpk/my-oauth/service"
@@ -85,7 +86,8 @@ func (h *Handler) logMiddleware(next http.Handler) http.Handler {
 		if ipAddress == "" {
 			ipAddress = r.RemoteAddr
 		}
-		h.logger.Printf("| %v | %-7s | %v | %v\n", sw.statusCode, r.Method, r.URL.Path, ipAddress)
+		timeNow := time.Now().UTC().Format("2006-01-02 15:04:05") // UTC guaranteed
+		h.logger.Printf("%s | %v | %-7s | %v | %v\n", timeNow, sw.statusCode, r.Method, r.URL.Path, ipAddress)
 	})
 }
 
