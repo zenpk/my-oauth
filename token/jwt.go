@@ -98,7 +98,7 @@ func (t *Token) VerifyJwt(token string) (bool, error) {
 		t.logger.Println("verify JWT error: issuer not matched")
 		return false, nil
 	}
-	if newClaims.IsValidAt(time.Now()) {
+	if !newClaims.IsValidAt(time.Now()) {
 		t.logger.Println("verify JWT error: token expired")
 		return false, nil
 	}

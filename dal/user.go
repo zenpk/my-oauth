@@ -47,7 +47,7 @@ func (u User) Init() error {
 }
 
 func (u User) Insert(user *User) error {
-	_, err := u.db.Exec("INSERT INTO users (uuid, name, password) VALUES (?, ?, ?);", user.Uuid, user.Password, user.Name)
+	_, err := u.db.Exec("INSERT INTO users (uuid, name, password) VALUES (?, ?, ?);", user.Uuid, user.Name, user.Password)
 	return err
 }
 

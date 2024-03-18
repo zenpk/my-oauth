@@ -62,7 +62,7 @@ func main() {
 	service.Init(conf, db)
 
 	hd := new(handler.Handler)
-	hd.Init(conf, logger, service, authInfo, tk)
+	hd.Init(conf, logger, db, service, authInfo, tk)
 
 	// clean up
 	osSignalChan := make(chan os.Signal, 2)

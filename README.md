@@ -30,7 +30,7 @@ npm run build
 
 ## API
 
-Due to being too lazy to write docs, please refer to the `tests` folder.
+Due to being too lazy to write docs, please refer to the `e2e` folder.
 
 ## Usage
 

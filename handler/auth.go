@@ -143,6 +143,7 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 		ClientId: client.ClientId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: expireTime},
+			Issuer:    h.conf.JwtIssuer,
 		},
 	}
 	accessToken, err := h.tk.GenJwt(claims)
@@ -214,7 +215,8 @@ func (h Handler) refresh(w http.ResponseWriter, r *http.Request) {
 		ClientId: client.ClientId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: expireTime},
-		},
+			Issuer:    h.conf.JwtIssuer,
+		},	
 	}
 	accessToken, err := h.tk.GenJwt(claims)
 	if err != nil {

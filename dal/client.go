@@ -3,7 +3,6 @@ package dal
 import (
 	"database/sql"
 	"errors"
-	"time"
 )
 
 type IClient interface {
@@ -17,12 +16,13 @@ type IClient interface {
 
 type Client struct {
 	db              *sql.DB
-	Id              int64
-	ClientId        string
-	Secret          string
-	Redirects       string
-	AccessTokenAge  time.Duration
-	RefreshTokenAge time.Duration
+	Id              int64  `json:"id"`
+	ClientId        string `json:"clientId"`
+	Secret          string `json:"secret"`
+	Redirects       string `json:"redirects"`
+	AccessTokenAge  int64  `json:"accessTokenAge"`
+	RefreshTokenAge int64  `json:"refreshTokenAge"`
+	Deleted         bool
 }
 
 func (c Client) Init() error {
@@ -66,7 +66,9 @@ func (c Client) SelectById(id int64) (client *Client, err error) {
 	}()
 	client = new(Client)
 	if rows.Next() {
-		if err := rows.Scan(&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge, &client.RefreshTokenAge); err != nil {
+		if err := rows.Scan(
+			&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge,
+			&client.RefreshTokenAge, &client.Deleted); err != nil {
 			return nil, err
 		}
 	} else {
@@ -85,7 +87,9 @@ func (c Client) SelectByClientId(clientId string) (client *Client, err error) {
 	}()
 	client = new(Client)
 	if rows.Next() {
-		if err := rows.Scan(&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge, &client.RefreshTokenAge); err != nil {
+		if err := rows.Scan(
+			&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge,
+			&client.RefreshTokenAge, &client.Deleted); err != nil {
 			return nil, err
 		}
 	} else {
@@ -105,7 +109,9 @@ func (c Client) SelectAll() (clients []*Client, err error) {
 	clients = make([]*Client, 0)
 	for rows.Next() {
 		client := new(Client)
-		if err := rows.Scan(&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge, &client.RefreshTokenAge); err != nil {
+		if err := rows.Scan(
+			&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge,
+			&client.RefreshTokenAge, &client.Deleted); err != nil {
 			return nil, err
 		}
 		clients = append(clients, client)

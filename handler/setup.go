@@ -61,6 +61,7 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 }
 
 type clientWithoutSecret struct {
+	Id              int64  `json:"id"`
 	ClientId        string `json:"clientId"`
 	Redirects       string `json:"redirects"`
 	AccessTokenAge  int64  `json:"accessTokenAge"`
@@ -81,10 +82,11 @@ func (h Handler) clientList(w http.ResponseWriter, r *http.Request) {
 	clientsConverted := make([]clientWithoutSecret, 0)
 	for _, client := range clients {
 		converted := clientWithoutSecret{
+			Id:              client.Id,
 			ClientId:        client.ClientId,
 			Redirects:       client.Redirects,
-			AccessTokenAge:  int64(client.AccessTokenAge),
-			RefreshTokenAge: int64(client.RefreshTokenAge),
+			AccessTokenAge:  client.AccessTokenAge,
+			RefreshTokenAge: client.RefreshTokenAge,
 		}
 		clientsConverted = append(clientsConverted, converted)
 	}

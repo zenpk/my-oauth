@@ -13,7 +13,7 @@ func (s *Service) GenAndInsertRefreshToken(claims *token.Claims, client *dal.Cli
 	if err != nil {
 		return "", err
 	}
-	expireTime := time.Now().Add(client.RefreshTokenAge * time.Hour)
+	expireTime := time.Now().Add(time.Duration(client.RefreshTokenAge) * time.Hour)
 	if err := s.db.RefreshTokens.Insert(&dal.RefreshToken{
 		Token:      refreshToken,
 		ClientId:   client.Id,

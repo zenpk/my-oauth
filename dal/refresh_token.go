@@ -76,9 +76,12 @@ func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, e
 	}()
 	refreshToken = new(RefreshToken)
 	if rows.Next() {
-		if err := rows.Scan(&refreshToken.Id, &refreshToken.Token, &refreshToken.ClientId, &refreshToken.UserId, &refreshToken.ExpireTime, &refreshToken.Deleted); err != nil {
+		var unixTime int64
+		if err := rows.Scan(&refreshToken.Id, &refreshToken.Token, &refreshToken.ClientId, &refreshToken.UserId, &unixTime, &refreshToken.Deleted); err != nil {
 			return nil, err
 		}
+		expireTime := time.Unix(unixTime, 0)
+		refreshToken.ExpireTime = &expireTime
 	} else {
 		return nil, nil
 	}
