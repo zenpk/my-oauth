@@ -2,7 +2,8 @@ import { Dispatch, SetStateAction } from "react";
 import { axiosDelete, axiosGet, axiosPost, CommonResp } from "./basic.ts";
 
 export type Client = {
-  id: string;
+  id?: number;
+  clientId: string;
   secret: string;
   redirects: string;
   accessTokenAge: number;
@@ -27,7 +28,7 @@ export async function clientCreateApi(
 }
 
 export type ClientDeleteReq = {
-  id: string;
+  id: number;
   adminPassword: string;
 };
 

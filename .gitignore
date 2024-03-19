@@ -73,13 +73,6 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -174,3 +167,5 @@ conf-prod.json
 frontend/node_modules/
 frontend/.idea/
 frontend/dist/
+my-oauth
+demo*

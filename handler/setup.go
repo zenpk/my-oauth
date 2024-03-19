@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/zenpk/my-oauth/db"
-	"github.com/zenpk/my-oauth/utils"
+	"github.com/zenpk/my-oauth/dal"
+	"github.com/zenpk/my-oauth/util"
 )
 
 type registerReq struct {
@@ -22,7 +22,7 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w, err)
 		return
 	}
-	if req.InvitationCode != utils.Conf.InvitationCode {
+	if req.InvitationCode != h.conf.InvitationCode {
 		responseErrMsg(w, "sorry, you need an invitation code or the code is incorrect")
 		return
 	}
@@ -30,30 +30,30 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	if len(req.Password) < utils.Conf.PasswordMinLength {
-		responseErrMsg(w, "the password should be at least "+strconv.Itoa(utils.Conf.PasswordMinLength)+" characters long")
+	if len(req.Password) < h.conf.PasswordMinLength {
+		responseErrMsg(w, "the password should be at least "+strconv.Itoa(h.conf.PasswordMinLength)+" characters long")
 		return
 	}
-	res, err := h.Db.TableUser.Select(db.UserUsername, req.Username)
+	checkUser, err := h.db.Users.SelectByName(req.Username)
 	if err != nil {
 		responseError(w, err)
 		return
 	}
-	if res != nil {
+	if checkUser != nil {
 		responseErrMsg(w, "user already exists")
 		return
 	}
-	passwordHash, err := utils.BCryptPassword(req.Password)
+	passwordHash, err := util.BCryptPassword(req.Password)
 	if err != nil {
 		responseError(w, err)
 		return
 	}
-	user := db.User{
+	user := &dal.User{
 		Uuid:     uuid.New().String(),
-		Username: req.Username,
+		Name:     req.Username,
 		Password: passwordHash,
 	}
-	if err := h.Db.TableUser.Insert(user); err != nil {
+	if err := h.db.Users.Insert(user); err != nil {
 		responseError(w, err)
 		return
 	}
@@ -61,10 +61,11 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 }
 
 type clientWithoutSecret struct {
-	Id              string `json:"id"`
+	Id              int64  `json:"id"`
+	ClientId        string `json:"clientId"`
 	Redirects       string `json:"redirects"`
-	AccessTokenAge  int    `json:"accessTokenAge"`
-	RefreshTokenAge int    `json:"refreshTokenAge"`
+	AccessTokenAge  int64  `json:"accessTokenAge"`
+	RefreshTokenAge int64  `json:"refreshTokenAge"`
 }
 
 type clientListResp struct {
@@ -73,7 +74,7 @@ type clientListResp struct {
 }
 
 func (h Handler) clientList(w http.ResponseWriter, r *http.Request) {
-	clients, err := h.Db.TableClient.All()
+	clients, err := h.db.Clients.SelectAll()
 	if err != nil {
 		responseError(w, err)
 		return
@@ -81,10 +82,11 @@ func (h Handler) clientList(w http.ResponseWriter, r *http.Request) {
 	clientsConverted := make([]clientWithoutSecret, 0)
 	for _, client := range clients {
 		converted := clientWithoutSecret{
-			Id:              client.(db.Client).Id,
-			Redirects:       client.(db.Client).Redirects,
-			AccessTokenAge:  client.(db.Client).AccessTokenAge,
-			RefreshTokenAge: client.(db.Client).RefreshTokenAge,
+			Id:              client.Id,
+			ClientId:        client.ClientId,
+			Redirects:       client.Redirects,
+			AccessTokenAge:  client.AccessTokenAge,
+			RefreshTokenAge: client.RefreshTokenAge,
 		}
 		clientsConverted = append(clientsConverted, converted)
 	}
@@ -95,7 +97,7 @@ func (h Handler) clientList(w http.ResponseWriter, r *http.Request) {
 }
 
 type clientCreateReq struct {
-	db.Client
+	dal.Client
 	AdminPassword string `json:"adminPassword"`
 }
 
@@ -105,7 +107,7 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w, err)
 		return
 	}
-	if req.Id == "" || req.Secret == "" || req.Redirects == "" || req.AccessTokenAge <= 0 || req.RefreshTokenAge <= 0 || req.AdminPassword == "" {
+	if req.ClientId == "" || req.Secret == "" || req.Redirects == "" || req.AccessTokenAge <= 0 || req.RefreshTokenAge <= 0 || req.AdminPassword == "" {
 		responseInputError(w)
 		return
 	}
@@ -113,7 +115,7 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		responseErrMsg(w, "refresh token age should be longer than access token age")
 		return
 	}
-	passwordMatch, err := utils.BCryptHashCheck(utils.Conf.AdminPassword, req.AdminPassword)
+	passwordMatch, err := util.BCryptHashCheck(h.conf.AdminPassword, req.AdminPassword)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -122,7 +124,7 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		responseErrMsg(w, "incorrect admin password")
 		return
 	}
-	oldClient, err := h.Db.TableClient.Select(db.ClientId, req.Id)
+	oldClient, err := h.db.Clients.SelectByClientId(req.ClientId)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -131,13 +133,13 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		responseErrMsg(w, "client id already exists")
 		return
 	}
-	hashedSecret, err := utils.BCryptPassword(req.Secret)
+	hashedSecret, err := util.BCryptPassword(req.Secret)
 	if err != nil {
 		responseError(w, err)
 		return
 	}
 	req.Secret = hashedSecret
-	if err := h.Db.TableClient.Insert(req.Client); err != nil {
+	if err := h.db.Clients.Insert(&req.Client); err != nil {
 		responseError(w, err)
 		return
 	}
@@ -145,7 +147,7 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 type clientDeleteReq struct {
-	Id            string `json:"id"`
+	Id            int64  `json:"id"`
 	AdminPassword string `json:"adminPassword"`
 }
 
@@ -155,11 +157,11 @@ func (h Handler) clientDelete(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w, err)
 		return
 	}
-	if req.Id == "" || req.AdminPassword == "" {
+	if req.Id <= 0 || req.AdminPassword == "" {
 		responseInputError(w)
 		return
 	}
-	passwordMatch, err := utils.BCryptHashCheck(utils.Conf.AdminPassword, req.AdminPassword)
+	passwordMatch, err := util.BCryptHashCheck(h.conf.AdminPassword, req.AdminPassword)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -168,7 +170,7 @@ func (h Handler) clientDelete(w http.ResponseWriter, r *http.Request) {
 		responseErrMsg(w, "incorrect admin password")
 		return
 	}
-	if err := h.Db.TableClient.Delete(db.ClientId, req.Id); err != nil {
+	if err := h.db.Clients.DeleteById(req.Id); err != nil {
 		responseError(w, err)
 		return
 	}
@@ -176,5 +178,10 @@ func (h Handler) clientDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) publicKey(w http.ResponseWriter, r *http.Request) {
-	responseJson(w, utils.Conf.JwtPublicKey)
+	jwk, err := h.tk.GetJWK()
+	if err != nil {
+		responseError(w, err)
+		return
+	}
+	responseJson(w, jwk)
 }

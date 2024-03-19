@@ -36,7 +36,7 @@ export function Admin() {
     }
   }
 
-  function clientDelete(id: string) {
+  function clientDelete(id: number) {
     const req: ClientDeleteReq = { id: id, adminPassword: adminPassword };
     clientDeleteApi(req, setWarn).then((resp) => {
       if (resp !== null) {
@@ -81,7 +81,7 @@ export function Admin() {
           <table>
             <thead>
               <tr>
-                <th>Id</th>
+                <th>Client Id</th>
                 <th>Access Token Age</th>
                 <th>Refresh Token Age</th>
                 <th>Redirects</th>
@@ -91,8 +91,8 @@ export function Admin() {
             <tbody>
               {clients.map((client) => {
                 return (
-                  <tr key={client.id}>
-                    <td>{client.id}</td>
+                  <tr key={client.id ?? 0}>
+                    <td>{client.clientId}</td>
                     <td>{client.accessTokenAge}</td>
                     <td>{client.refreshTokenAge}</td>
                     <td>{client.redirects}</td>
@@ -100,7 +100,7 @@ export function Admin() {
                       <Button
                         text={"Delete"}
                         click={() => {
-                          clientDelete(client.id);
+                          clientDelete(client.id ?? 0);
                         }}
                       />
                     </td>
@@ -124,7 +124,7 @@ function AddForm({
   setWarn: Dispatch<SetStateAction<string>>;
   adminPassword: string;
 }) {
-  const idRef = useRef<HTMLInputElement | null>(null);
+  const clientIdRef = useRef<HTMLInputElement | null>(null);
   const secretRef = useRef<HTMLInputElement | null>(null);
   const accessAgeRef = useRef<HTMLInputElement | null>(null);
   const refreshAgeRef = useRef<HTMLInputElement | null>(null);
@@ -132,21 +132,21 @@ function AddForm({
 
   function click() {
     if (
-      idRef.current &&
+      clientIdRef.current &&
       secretRef.current &&
       accessAgeRef.current &&
       refreshAgeRef.current &&
       redirectRef.current
     ) {
       if (
-        idRef.current.value &&
+        clientIdRef.current.value &&
         secretRef.current.value &&
         accessAgeRef.current.value &&
         refreshAgeRef.current.value &&
         redirectRef.current.value
       ) {
         const client: ClientCreateReq = {
-          id: idRef.current.value,
+          clientId: clientIdRef.current.value,
           secret: secretRef.current.value,
           accessTokenAge: +accessAgeRef.current.value,
           refreshTokenAge: +refreshAgeRef.current.value,
@@ -164,7 +164,7 @@ function AddForm({
 
   return (
     <div className={"flex-basic-column"}>
-      <Input label={"Id"} inputType={"text"} myRef={idRef} />
+      <Input label={"Client Id"} inputType={"text"} myRef={clientIdRef} />
       <Input label={"Secret"} inputType={"password"} myRef={secretRef} />
       <Input
         label={"Access Token Age (hours)"}

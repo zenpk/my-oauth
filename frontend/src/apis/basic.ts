@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Dispatch, SetStateAction } from "react";
 
-const BASE = "http://localhost:20476";
+const BASE = import.meta.env.VITE_BACKEND_URL;
 
 export type CommonResp = {
   ok: boolean;

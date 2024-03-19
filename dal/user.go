@@ -10,6 +10,7 @@ type IUser interface {
 	Insert(user *User) error
 	SelectById(id int64) (*User, error)
 	SelectByUuid(uuid string) (*User, error)
+	SelectByName(name string) (*User, error)
 	DeleteById(id int64) error
 }
 
@@ -46,7 +47,7 @@ func (u User) Init() error {
 }
 
 func (u User) Insert(user *User) error {
-	_, err := u.db.Exec("INSERT INTO users (uuid, name, password) VALUES (?, ?, ?);", user.Uuid, user.Password, user.Name)
+	_, err := u.db.Exec("INSERT INTO users (uuid, name, password) VALUES (?, ?, ?);", user.Uuid, user.Name, user.Password)
 	return err
 }
 
@@ -71,6 +72,25 @@ func (u User) SelectById(id int64) (user *User, err error) {
 
 func (u User) SelectByUuid(uuid string) (user *User, err error) {
 	rows, err := u.db.Query("SELECT * FROM users WHERE (uuid = ? AND deleted = 0);", uuid)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
+	user = new(User)
+	if rows.Next() {
+		if err := rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Password, &user.Deleted); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, nil
+	}
+	return user, err
+}
+
+func (u User) SelectByName(name string) (user *User, err error) {
+	rows, err := u.db.Query("SELECT * FROM users WHERE (name = ? AND deleted = 0);", name)
 	if err != nil {
 		return nil, err
 	}

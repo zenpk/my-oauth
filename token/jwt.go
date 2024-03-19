@@ -3,21 +3,17 @@ package token
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"log"
+	"math/big"
 	"os"
 	"time"
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/zenpk/my-oauth/util"
 )
-
-type Token struct {
-	conf          *util.Configuration
-	rsaPrivateKey *rsa.PrivateKey
-}
 
 type Claims struct {
 	jwt.RegisteredClaims
@@ -26,14 +22,15 @@ type Claims struct {
 	ClientId string `json:"clientId"`
 }
 
-func (t *Token) Init(conf *util.Configuration) error {
+func (t *Token) Init(conf *util.Configuration, logger *util.Logger) error {
 	t.conf = conf
+	t.logger = logger
 	// parse private key
-	privateKeyBytes, err := os.ReadFile(t.conf.RsaPrivateKeyPath)
+	pemData, err := os.ReadFile(t.conf.RsaPrivateKeyPath)
 	if err != nil {
 		return err
 	}
-	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
+	privateKeyBlock, _ := pem.Decode(pemData)
 	if privateKeyBlock == nil {
 		return errors.New("Token Init read RSA private key failed")
 	}
@@ -54,7 +51,7 @@ func (t *Token) Init(conf *util.Configuration) error {
 	return nil
 }
 
-func (t *Token) GenerateJwt(claims *Claims) (string, error) {
+func (t *Token) GenJwt(claims *Claims) (string, error) {
 	signer, err := jwt.NewSignerRS(jwt.RS256, t.rsaPrivateKey)
 	if err != nil {
 		return "", err
@@ -67,14 +64,13 @@ func (t *Token) GenerateJwt(claims *Claims) (string, error) {
 	return token.String(), nil
 }
 
-func (t *Token) VerifyJwt(token *jwt.Token) (bool, error) {
+func (t *Token) VerifyJwt(token string) (bool, error) {
 	verifier, err := jwt.NewVerifierRS(jwt.RS256, &t.rsaPrivateKey.PublicKey)
 	if err != nil {
 		return false, err
 	}
 	// parse and verify a token
-	tokenBytes := token.Bytes()
-	parsedToken, err := jwt.Parse(tokenBytes, verifier)
+	parsedToken, err := jwt.Parse([]byte(token), verifier)
 	if err != nil {
 		return false, err
 	}
@@ -95,16 +91,44 @@ func (t *Token) VerifyJwt(token *jwt.Token) (bool, error) {
 	// 	}
 	// }
 	// 	if !audiencePass {
-	// 		log.Println("verify JWT error: audience not matched")
+	// 		t.logger.Println("verify JWT error: audience not matched")
 	// 		return false, nil
 	// 	}
 	if newClaims.Issuer != t.conf.JwtIssuer {
-		log.Println("verify JWT error: issuer not matched")
+		t.logger.Println("verify JWT error: issuer not matched")
 		return false, nil
 	}
-	if newClaims.IsValidAt(time.Now()) {
-		log.Println("verify JWT error: token expired")
+	if !newClaims.IsValidAt(time.Now()) {
+		t.logger.Println("verify JWT error: token expired")
 		return false, nil
 	}
 	return true, nil
+}
+
+type Jwk struct {
+	Kty string `json:"kty"`
+	E   string `json:"e"`
+	Use string `json:"use"`
+	Alg string `json:"alg"`
+	N   string `json:"n"`
+}
+
+// Get converts an RSA public key in PEM format to a JWK
+func (t *Token) GetJWK() (*Jwk, error) {
+	// encode modulus and exponent to Base64 URL
+	modulus := t.base64URLEncode(t.rsaPrivateKey.PublicKey.N)
+	exponent := t.base64URLEncode(big.NewInt(int64(t.rsaPrivateKey.PublicKey.E)))
+	return &Jwk{
+		Kty: "RSA",
+		E:   exponent,
+		Use: "sig",
+		Alg: "RS256",
+		N:   modulus,
+	}, nil
+}
+
+// base64URLEncode encodes a big integer (like RSA modulus or exponent) in the Base64 URL encoding
+func (t *Token) base64URLEncode(value *big.Int) string {
+	// the RawURLEncoding is used to avoid padding, which is typical for URL-encoded base64 variants
+	return base64.RawURLEncoding.EncodeToString(value.Bytes())
 }

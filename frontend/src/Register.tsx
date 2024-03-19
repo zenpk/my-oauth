@@ -35,7 +35,7 @@ export function Register() {
     registerApi(req, setWarn).then((resp) => {
       NProgress.done();
       if (resp) {
-        setInfo("Register succeeded! You can now close the window.");
+        setInfo("Register succeeded! You can close the window now.");
       }
     });
   }

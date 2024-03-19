@@ -10,6 +10,7 @@ type IRefreshToken interface {
 	Init() error
 	Insert(token *RefreshToken) error
 	SelectByToken(token string) (*RefreshToken, error)
+	CleanExpired() error
 	DeleteById(id int64) error
 }
 
@@ -27,7 +28,7 @@ func (r RefreshToken) Init() error {
 	if _, err := r.db.Exec(`
 	CREATE TABLE IF NOT EXISTS refresh_tokens (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
-	    token TEXT NOT NULL UNIQUE,
+	    token TEXT NOT NULL,
 	    client_id INTEGER NOT NULL,
 	    user_id INTEGER NOT NULL,
 		expire_time INTEGER NOT NULL,
@@ -41,7 +42,7 @@ func (r RefreshToken) Init() error {
 		return err
 	}
 	if !rows.Next() {
-		if _, err = r.db.Exec(`CREATE UNIQUE INDEX idx_token ON refresh_tokens(token);`); err != nil {
+		if _, err = r.db.Exec(`CREATE INDEX idx_token ON refresh_tokens(token);`); err != nil {
 			return err
 		}
 	}
@@ -75,13 +76,22 @@ func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, e
 	}()
 	refreshToken = new(RefreshToken)
 	if rows.Next() {
-		if err := rows.Scan(&refreshToken.Id, &refreshToken.Token, &refreshToken.ClientId, &refreshToken.UserId, &refreshToken.ExpireTime, &refreshToken.Deleted); err != nil {
+		var unixTime int64
+		if err := rows.Scan(&refreshToken.Id, &refreshToken.Token, &refreshToken.ClientId, &refreshToken.UserId, &unixTime, &refreshToken.Deleted); err != nil {
 			return nil, err
 		}
+		expireTime := time.Unix(unixTime, 0)
+		refreshToken.ExpireTime = &expireTime
 	} else {
 		return nil, nil
 	}
 	return refreshToken, err
+}
+
+func (r RefreshToken) CleanExpired() error {
+	timeNow := time.Now().Unix()
+	_, err := r.db.Exec("UPDATE refresh_tokens SET deleted = 1 WHERE expire_time < ?;", timeNow)
+	return err
 }
 
 func (r RefreshToken) DeleteById(id int64) error {

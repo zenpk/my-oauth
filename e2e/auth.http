@@ -1,0 +1,42 @@
+@url = http://127.0.0.1:20476
+
+###
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "demo",
+  "password": "demopass",
+  "clientId": "my",
+  "codeChallenge": "plP8aHmykBUgarC_HDHzGmYhnJiipBy69FE8KWoLMqI",
+  "redirect": "http://localhost:3000/"
+}
+
+###
+POST {{url}}/auth/authorize
+Content-Type: application/json
+
+{
+  "clientId": "my",
+  "clientSecret": "my",
+  "authorizationCode": "5WFuBR8qpSkrCd3Pg3BhZafXBzNSJLGhC6SMG2u6wyvymCE76oJaV6hVhdub2YZ0DbQ6rTOr7xl4T8B0prWADoGxhjvoxjezKqVv8FwyZ3dg2NWnf5sYYVzuGBVxZPf3",
+  "codeVerifier": "tpWFpflpskMgYA"
+}
+
+###
+POST {{url}}/auth/refresh
+Content-Type: application/json
+
+{
+  "clientId": "my",
+  "clientSecret": "my",
+  "refreshToken": "uQh832klBT5a53gJQmhD7sbDRb00iWeMH6tVLB2xnU1DoZTjXb8Vz0i52cvDX0PHIugcYr6Nx0AfIxa6G9GIM61itq9x7DxMpCQGSG1M1Zj8vY3vDGXilsDFjStCQ5mI"
+}
+
+### verify
+POST {{url}}/auth/verify
+Content-Type: application/json
+
+{
+  "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkZW1vIiwiZXhwIjoxNzEwNzc2NTY0LCJVdWlkIjoiMTUyNThjZGItNzZkOC00YjlkLTk3MzgtYmVjNDA0OTIyYTRiIiwiVXNlcm5hbWUiOiJkZW1vIiwiQ2xpZW50SWQiOiJteSJ9.WXUD0063sOGaOfEZPCHkmUWimtidQikMQoXxG_stPnZ0blsxkgwskSnfvljvbfO4PkWKWIcXqLBR0IoQqCq46f063YjBeuWea-Lgp3-O7ZBMHzPZMDX9UoDEYSMEfNlIz9v73CLl_PVdRYuI6dXvejVy8EpMC2KEPLwC-HgVmzYprDM7BviqYU5b0me_Vzd_5TJCCenNjEQigdjchj9xAgpeGar8wv_9M4S_8_ZRURwasjgM6UEQPWED1xJYiiPfC7iQ8EEihfQIjW4zV1MFGNtE-Wd4yxdySug0LNICVe0VksqL08Yp2t0kT1PQPDegBgmmJKiXkJpOBquZYGmkOQ"
+}

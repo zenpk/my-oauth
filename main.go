@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,8 +12,10 @@ import (
 	"time"
 
 	"github.com/zenpk/my-oauth/dal"
-	"github.com/zenpk/my-oauth/handlers"
-	"github.com/zenpk/my-oauth/utils"
+	"github.com/zenpk/my-oauth/handler"
+	"github.com/zenpk/my-oauth/service"
+	"github.com/zenpk/my-oauth/token"
+	"github.com/zenpk/my-oauth/util"
 )
 
 var mode = flag.String("mode", "dev", "define program mode")
@@ -27,58 +28,57 @@ func main() {
 		if cleanUpErr != nil {
 			panic(cleanUpErr)
 		}
-		fmt.Println("gracefully exited") // need to use fmt because at this point the logFile is already closed
+		log.Println("gracefully exited")
 	}()
 
-	conf := new(utils.Configuration)
+	conf := new(util.Configuration)
 	if err := conf.Init(*mode); err != nil {
 		panic(err)
 	}
 
-	logFile, err := os.OpenFile(conf.LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+	logger := new(util.Logger)
+	if err := logger.Init(conf); err != nil {
+		panic(err)
 	}
-	log.SetOutput(logFile)
 	defer func() {
 		log.Println("exiting")
-		if err := logFile.Close(); err != nil {
+		if err := logger.Close(); err != nil {
 			cleanUpErr = errors.Join(cleanUpErr, err)
 		}
 	}()
 
-	stop := make(chan struct{})
-	preparing := make(chan struct{})
-	dbRunning := make(chan struct{})
-	db := new(dal.Db)
-	go func() {
-		if err := db.Init(preparing, stop); err != nil {
-			panic(err)
-		}
-		close(dbRunning)
-	}()
-	<-preparing
+	db := new(dal.Database)
+	if err := db.Init(conf); err != nil {
+		panic(err)
+	}
+
+	authInfo := new(util.AuthorizationInfo)
+	authInfo.Init(conf)
+	tk := new(token.Token)
+	if err := tk.Init(conf, logger); err != nil {
+		panic(err)
+	}
+	service := new(service.Service)
+	service.Init(conf, db)
+
+	hd := new(handler.Handler)
+	hd.Init(conf, logger, db, service, authInfo, tk)
 
 	// clean up
 	osSignalChan := make(chan os.Signal, 2)
 	signal.Notify(osSignalChan, os.Interrupt, syscall.SIGTERM)
 
-	handlerInstance := handlers.Handler{Db: db}
-	server := handlers.CreateServer(handlerInstance)
-
 	go func() {
 		<-osSignalChan
-		close(stop)
-		<-dbRunning
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		if err := server.Shutdown(ctx); err != nil {
+		if err := hd.Shutdown(ctx); err != nil {
 			panic(err)
 		}
 	}()
 
-	log.Printf("start listening at %v\n", server.Addr)
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	log.Println("started")
+	if err := hd.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }

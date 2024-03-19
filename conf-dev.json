@@ -1,32 +1,12 @@
 {
-  "HttpAddress": "0.0.0.0:20476",
-  "InvitationCode": "demo",
-  "AdminPassword": "$2a$12$nA.Br7mc//sjemVPW85q/eq5JT8d3Z42LkB18lb7.0M05fp3Pjj6m",
-  "AuthorizationCodeLength": 128,
-  "RefreshTokenLength": 128,
-  "PasswordMinLength": 8,
-  "LogFilePath": "my-oauth.log",
-  "JwtIssuer": "demo",
-  "JwtPrivateKey": {
-    "p": "z_DIr92Q_xHDTEhkGScZLHDOvfOszXTSDYI6lzqPVoRxNsP0fG1BbQUxqU8PkGWmWlYeZfxHqQRbQ5pwYywm6lY_sG7LVmblhTcdKKneSRiTpm9s2XV6pz8VQAbJB0mLonfHSMhi6RoSEGp56KI0p7-jaxTyXjTLQOKIPOH5g6c",
-    "kty": "RSA",
-    "q": "rAT7sjRJJEGrF93dfIqeie-_vEVKPXS_iLV7RKZkPvJJOsIMn0p30wKSYrVOyJxosilQ8GVtR4UAa1QH83NYv3zt02vdoxFU89Ki1dnOnbtpigxM6bBTN6KHGGjNmu4G0oVj9_YM1cNKYxpwnfJXVdkovtaJ6iuH97zud2MeRG8",
-    "d": "XN07I6jl8FeYuraiheHsb5f4qHFjIDNMNRxU4VhACDWzvFypzC5zSxFAaTmNdbCbgvw8YwZfFuFP6wElFFCIbqfJcc9pZwFG-K0u2JRPe0wWDkPmWfYYlHIgtEafhe2m9iiFOBH8UfbBZFqvgM87QVviciTPkkzz3JuKYhc8VoOUOZY10RES4pjzZCqxSj3WwudqI4BiCn0YgHi46PkdD9Nnv6OImh2KLGRZyo-G7Hfd-UsBGe7_wGOlf3fJFhS3qjdArO8eB3U0KemynS5JFBVVgt4VZXVF0gwe18TCSe3XygnBxVh-pRxvX46NheLiFMoy97DQm10TZQVytc9BJQ",
-    "e": "AQAB",
-    "use": "sig",
-    "kid": "demo",
-    "qi": "VBS3MDg2Jsd5CYi4aKCfNPYQD8sw5tV2FXJlW7dmwPiRYGzGO0nVXws3c0Okjecbp3xcpdDfdi_gLmiVKVF1MnwRky1ACuQ5sfNCBtzZWpQJsPGEJswkipzbhd1K43UY4qMFipyySx8FK5J6EhH69O_aG4NoWHZx13njWWu7fbE",
-    "dp": "hBLxxRI7-Ga13wvT2E4HJTz5c5kEVvMuP7pJsKhXRqKUri5EaYuTlMVJx7oZrqOBx7sPT8OvWGEV_phnbfYrOYhSp6OXr2dnvPdGo_9Q2qirj3kScAS4ROZCfwpQQTqrYCQoBciRWnFeq-KVT_dG7o1AJNGHJ-LsfmfkFJeLPd0",
-    "alg": "RS256",
-    "dq": "WrOV83TWTCPEDyWRL6X3ykt8Ec2HQ7hXdcIbaStDGF2wdybyeNtPKxfkD-AB1o2CNs7KOreAU4GxouX_-0IKvY0l6aCqkN0GqjmaWqAp7clv8LZjp6StfFxaV2iLYPG47zAechRu2BfNFUxPrTinDEEg1t9QgQTLALnCE3lT8Ek",
-    "n": "i7nTCyBFLAlK4p2IO_mkf5yOfjjs7_OQ35PqVYux-ZSSyA5IbP277_hDKFAEsorvng7pvPSgw8nx3Ga2ki3oEws-dM_Fi9gLrBJ_xbcV_CFSIFlE1zU4_vO9n56BVyCASjFUs7mRbFHzN6c0Pahke5WATAZtm4MVaJuITLJ_cXG0dcRJGTW8fmZMSz-u49or3rEH2ULenS53EirKiGjFzH5Qyu-EzYAEo6XrsmwlClm6ppJ0-pPRn7rNQmT-TaA-9mH2xPEnchmFqdAl9OJqoUUVrwnXw0MyMFZqgJJWcEEMToDF7-hj1vqSljx64wwU3oizuD7TME-j9Kw0RLpxaQ"
-  },
-  "JwtPublicKey": {
-    "kty": "RSA",
-    "e": "AQAB",
-    "use": "sig",
-    "kid": "demo",
-    "alg": "RS256",
-    "n": "i7nTCyBFLAlK4p2IO_mkf5yOfjjs7_OQ35PqVYux-ZSSyA5IbP277_hDKFAEsorvng7pvPSgw8nx3Ga2ki3oEws-dM_Fi9gLrBJ_xbcV_CFSIFlE1zU4_vO9n56BVyCASjFUs7mRbFHzN6c0Pahke5WATAZtm4MVaJuITLJ_cXG0dcRJGTW8fmZMSz-u49or3rEH2ULenS53EirKiGjFzH5Qyu-EzYAEo6XrsmwlClm6ppJ0-pPRn7rNQmT-TaA-9mH2xPEnchmFqdAl9OJqoUUVrwnXw0MyMFZqgJJWcEEMToDF7-hj1vqSljx64wwU3oizuD7TME-j9Kw0RLpxaQ"
-  }
+  "httpAddress": "0.0.0.0:20476",
+  "invitationCode": "demo",
+  "adminPassword": "$2a$12$nA.Br7mc//sjemVPW85q/eq5JT8d3Z42LkB18lb7.0M05fp3Pjj6m",
+  "authorizationCodeLength": 128,
+  "refreshTokenLength": 128,
+  "passwordMinLength": 8,
+  "jwtIssuer": "demo",
+  "dbPath": "demo.db",
+  "logFilePath": "my-oauth.log",
+  "rsaPrivateKeyPath": "demo"
 }

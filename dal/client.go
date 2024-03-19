@@ -3,7 +3,6 @@ package dal
 import (
 	"database/sql"
 	"errors"
-	"time"
 )
 
 type IClient interface {
@@ -11,25 +10,27 @@ type IClient interface {
 	Insert(client *Client) error
 	SelectById(id int64) (*Client, error)
 	SelectByClientId(clientId string) (*Client, error)
+	SelectAll() ([]*Client, error)
 	DeleteById(id int64) error
 }
 
 type Client struct {
 	db              *sql.DB
-	Id              int64
-	ClientId        string
-	ClientSecret    string
-	Redirects       string
-	AccessTokenAge  time.Duration
-	RefreshTokenAge time.Duration
+	Id              int64  `json:"id"`
+	ClientId        string `json:"clientId"`
+	Secret          string `json:"secret"`
+	Redirects       string `json:"redirects"`
+	AccessTokenAge  int64  `json:"accessTokenAge"`
+	RefreshTokenAge int64  `json:"refreshTokenAge"`
+	Deleted         bool
 }
 
 func (c Client) Init() error {
 	if _, err := c.db.Exec(`
 	CREATE TABLE IF NOT EXISTS clients (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
-	    client_id TEXT NOT NULL UNIQUE,
-	    client_secret TEXT NOT NULL,
+	    client_id TEXT NOT NULL,
+	    secret TEXT NOT NULL,
 	    redirects TEXT NOT NULL,
 	    access_token_age INTEGER NOT NULL,
 	    refresh_token_age INTEGER NOT NULL,
@@ -42,7 +43,7 @@ func (c Client) Init() error {
 		return err
 	}
 	if !rows.Next() {
-		if _, err = c.db.Exec(`CREATE UNIQUE INDEX idx_client_id ON clients(client_id);`); err != nil {
+		if _, err = c.db.Exec(`CREATE INDEX idx_client_id ON clients(client_id);`); err != nil {
 			return err
 		}
 	}
@@ -50,8 +51,8 @@ func (c Client) Init() error {
 }
 
 func (c Client) Insert(client *Client) error {
-	_, err := c.db.Exec("INSERT INTO clients (client_id, client_secret, redirects, access_token_age, refresh_token_age) VALUES (?, ?, ?, ?, ?);",
-		client.ClientId, client.ClientSecret, client.Redirects, client.AccessTokenAge, client.RefreshTokenAge)
+	_, err := c.db.Exec("INSERT INTO clients (client_id, secret, redirects, access_token_age, refresh_token_age) VALUES (?, ?, ?, ?, ?);",
+		client.ClientId, client.Secret, client.Redirects, client.AccessTokenAge, client.RefreshTokenAge)
 	return err
 }
 
@@ -65,7 +66,9 @@ func (c Client) SelectById(id int64) (client *Client, err error) {
 	}()
 	client = new(Client)
 	if rows.Next() {
-		if err := rows.Scan(&client.Id, &client.ClientId, &client.ClientSecret, &client.Redirects, &client.AccessTokenAge, &client.RefreshTokenAge); err != nil {
+		if err := rows.Scan(
+			&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge,
+			&client.RefreshTokenAge, &client.Deleted); err != nil {
 			return nil, err
 		}
 	} else {
@@ -84,13 +87,36 @@ func (c Client) SelectByClientId(clientId string) (client *Client, err error) {
 	}()
 	client = new(Client)
 	if rows.Next() {
-		if err := rows.Scan(&client.Id, &client.ClientId, &client.ClientSecret, &client.Redirects, &client.AccessTokenAge, &client.RefreshTokenAge); err != nil {
+		if err := rows.Scan(
+			&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge,
+			&client.RefreshTokenAge, &client.Deleted); err != nil {
 			return nil, err
 		}
 	} else {
 		return nil, nil
 	}
 	return client, err
+}
+
+func (c Client) SelectAll() (clients []*Client, err error) {
+	rows, err := c.db.Query("SELECT * FROM clients WHERE deleted = 0;")
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = errors.Join(err, rows.Close())
+	}()
+	clients = make([]*Client, 0)
+	for rows.Next() {
+		client := new(Client)
+		if err := rows.Scan(
+			&client.Id, &client.ClientId, &client.Secret, &client.Redirects, &client.AccessTokenAge,
+			&client.RefreshTokenAge, &client.Deleted); err != nil {
+			return nil, err
+		}
+		clients = append(clients, client)
+	}
+	return clients, err
 }
 
 func (c Client) DeleteById(id int64) error {
