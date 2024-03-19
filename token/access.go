@@ -21,9 +21,9 @@ type Token struct {
 
 type Claims struct {
 	jwt.RegisteredClaims
-	Uuid     string
-	Username string
-	ClientId string
+	Uuid     string `json:"uuid"`
+	Username string `json:"username"`
+	ClientId string `json:"clientId"`
 }
 
 func (t *Token) Init(conf *util.Configuration) error {
