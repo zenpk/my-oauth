@@ -64,19 +64,19 @@ func (t *Token) GenJwt(claims *Claims) (string, error) {
 	return token.String(), nil
 }
 
-func (t *Token) VerifyJwt(token string) (bool, error) {
+func (t *Token) ParseAndVerifyJwt(token string) (*Claims, bool, error) {
 	verifier, err := jwt.NewVerifierRS(jwt.RS256, &t.rsaPrivateKey.PublicKey)
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 	// parse and verify a token
 	parsedToken, err := jwt.Parse([]byte(token), verifier)
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 	newClaims := new(Claims)
 	if err := json.Unmarshal(parsedToken.Claims(), newClaims); err != nil {
-		return false, err
+		return nil, false, err
 	}
 	// don't want to bother implementing it
 	// 	// at least match one audience
@@ -96,13 +96,13 @@ func (t *Token) VerifyJwt(token string) (bool, error) {
 	// 	}
 	if newClaims.Issuer != t.conf.JwtIssuer {
 		t.logger.Println("verify JWT error: issuer not matched")
-		return false, nil
+		return nil, false, nil
 	}
 	if !newClaims.IsValidAt(time.Now()) {
 		t.logger.Println("verify JWT error: token expired")
-		return false, nil
+		return nil, false, nil
 	}
-	return true, nil
+	return newClaims, true, nil
 }
 
 type Jwk struct {

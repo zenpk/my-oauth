@@ -84,7 +84,10 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err)
 		return
 	}
-	responseJson(w, loginResp{
+	// ok is ignored because it should always be true
+	sw, _ := w.(*statusResponseWriter)
+	sw.WriteUsername(user.Name)
+	responseJson(sw, loginResp{
 		commonResp:        genOkResponse(),
 		AuthorizationCode: authorizationCode,
 	})
@@ -156,7 +159,9 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err)
 		return
 	}
-	responseJson(w, authorizeResp{
+	sw, _ := w.(*statusResponseWriter)
+	sw.WriteUsername(user.Name)
+	responseJson(sw, authorizeResp{
 		commonResp:   genOkResponse(),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -216,14 +221,16 @@ func (h Handler) refresh(w http.ResponseWriter, r *http.Request) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: expireTime},
 			Issuer:    h.conf.JwtIssuer,
-		},	
+		},
 	}
 	accessToken, err := h.tk.GenJwt(claims)
 	if err != nil {
 		responseError(w, err)
 		return
 	}
-	responseJson(w, refreshResp{
+	sw, _ := w.(*statusResponseWriter)
+	sw.WriteUsername(user.Name)
+	responseJson(sw, refreshResp{
 		commonResp:  genOkResponse(),
 		AccessToken: accessToken,
 	})
@@ -243,7 +250,7 @@ func (h Handler) verify(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	ok, err := h.tk.VerifyJwt(req.AccessToken)
+	claims, ok, err := h.tk.ParseAndVerifyJwt(req.AccessToken)
 	if err != nil {
 		responseError(w, err)
 		return
@@ -252,7 +259,9 @@ func (h Handler) verify(w http.ResponseWriter, r *http.Request) {
 		responseErrMsg(w, "JWT parse failed")
 		return
 	}
-	responseOk(w)
+	sw, _ := w.(*statusResponseWriter)
+	sw.WriteUsername(claims.Username)
+	responseOk(sw)
 }
 
 func (h Handler) checkClient(clientId, clientSecret string) (*dal.Client, int, error) {

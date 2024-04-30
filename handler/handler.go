@@ -63,6 +63,7 @@ func (h *Handler) middlewares(method string, handler func(w http.ResponseWriter,
 type statusResponseWriter struct {
 	http.ResponseWriter
 	statusCode int
+	username   string
 }
 
 func (s *statusResponseWriter) WriteHeader(statusCode int) {
@@ -70,11 +71,16 @@ func (s *statusResponseWriter) WriteHeader(statusCode int) {
 	s.ResponseWriter.WriteHeader(statusCode)
 }
 
+func (s *statusResponseWriter) WriteUsername(username string) {
+	s.username = username
+}
+
 func (h *Handler) logMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sw := &statusResponseWriter{
 			w,
 			http.StatusOK,
+			"unknown user",
 		}
 
 		next.ServeHTTP(sw, r)
@@ -87,7 +93,7 @@ func (h *Handler) logMiddleware(next http.Handler) http.Handler {
 			ipAddress = r.RemoteAddr
 		}
 		timeNow := time.Now().UTC().Format("2006-01-02 15:04:05") // UTC guaranteed
-		h.logger.Printf("%s | %v | %-7s | %v | %v\n", timeNow, sw.statusCode, r.Method, r.URL.Path, ipAddress)
+		h.logger.Printf("%s | %v | %-7s | %v | %v | %v\n", timeNow, sw.statusCode, r.Method, r.URL.Path, ipAddress, sw.username)
 	})
 }
 
