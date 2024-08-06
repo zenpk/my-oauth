@@ -1,5 +1,5 @@
 import { Input } from "./components/Input.tsx";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "./components/Button.tsx";
 import { useSearchParams } from "react-router-dom";
 import { loginApi, LoginReq } from "./apis/auth.ts";
@@ -10,6 +10,17 @@ export function Login() {
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
   const [searchParams] = useSearchParams();
+
+  function onEnter(event: KeyboardEvent) {
+    if (event.key === "Enter") {
+      login();
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener("keydown", onEnter);
+    return document.removeEventListener("keydown", onEnter);
+  }, []);
 
   function login() {
     NProgress.start();
