@@ -18,8 +18,8 @@ export function Login() {
   }
 
   useEffect(() => {
-    document.addEventListener("keydown", onEnter);
-    return document.removeEventListener("keydown", onEnter);
+    window.addEventListener("keydown", onEnter);
+    return window.removeEventListener("keydown", onEnter);
   }, []);
 
   function login() {
