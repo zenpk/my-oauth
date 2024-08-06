@@ -199,6 +199,10 @@ func (h Handler) refresh(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err)
 		return
 	}
+	if oldRefreshToken == nil {
+		responseErrMsg(w, "refresh token doesn't exist")
+		return
+	}
 	if oldRefreshToken.ClientId != client.Id {
 		responseErrMsg(w, "client id not match")
 		return
