@@ -1,5 +1,5 @@
-import { Dispatch, SetStateAction } from "react";
-import { axiosDelete, axiosGet, axiosPost, CommonResp } from "./basic.ts";
+import type { Dispatch, SetStateAction } from "react";
+import { type CommonResp, axiosDelete, axiosGet, axiosPost } from "./basic.ts";
 
 export type Client = {
   id?: number;
@@ -24,7 +24,11 @@ export async function clientCreateApi(
   req: ClientCreateReq,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
-  return axiosPost<CommonResp>("/setup/client-create", req, setWarn);
+  return axiosPost<ClientCreateReq, CommonResp>(
+    "/setup/client-create",
+    req,
+    setWarn,
+  );
 }
 
 export type ClientDeleteReq = {
@@ -36,7 +40,11 @@ export async function clientDeleteApi(
   req: ClientDeleteReq,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
-  return axiosDelete<CommonResp>("/setup/client-delete", req, setWarn);
+  return axiosDelete<ClientDeleteReq, CommonResp>(
+    "/setup/client-delete",
+    req,
+    setWarn,
+  );
 }
 
 export type RegisterReq = {
@@ -49,5 +57,5 @@ export async function registerApi(
   req: RegisterReq,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
-  return axiosPost<CommonResp>("/setup/register", req, setWarn);
+  return axiosPost<RegisterReq, CommonResp>("/setup/register", req, setWarn);
 }

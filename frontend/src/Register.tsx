@@ -1,9 +1,9 @@
-import { useSearchParams } from "react-router-dom";
+import NProgress from "nprogress";
 import { useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { type RegisterReq, registerApi } from "./apis/setup.ts";
 import { Button } from "./components/Button.tsx";
 import { Input } from "./components/Input.tsx";
-import { registerApi, RegisterReq } from "./apis/setup.ts";
-import NProgress from "nprogress";
 
 export function Register() {
   const [info, setInfo] = useState("");

@@ -28,6 +28,7 @@ export function Button({
 
   return (
     <button
+      type="button"
       className={myClassName}
       onMouseDown={mouseDown}
       onMouseUp={mouseUp}

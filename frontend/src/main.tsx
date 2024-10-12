@@ -1,8 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./main.css";
-import "./nprogress.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./styles/main.css";
+import "./styles/nprogress.css";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Admin } from "./Admin.tsx";
 import { Login } from "./Login.tsx";
 import { Register } from "./Register.tsx";

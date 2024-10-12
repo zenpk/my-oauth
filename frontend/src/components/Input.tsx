@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Button } from "./Button.tsx";
 
 export function Input({
@@ -34,7 +34,7 @@ export function Input({
           ref={myRef}
           type={inputType}
           onKeyDown={keyDown}
-        ></input>
+        />
         {buttonText && <Button text={buttonText} click={enter} />}
       </div>
     </div>

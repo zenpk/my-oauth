@@ -1,9 +1,9 @@
-import { Input } from "./components/Input.tsx";
-import { useEffect, useRef, useState } from "react";
-import { Button } from "./components/Button.tsx";
-import { useSearchParams } from "react-router-dom";
-import { loginApi, LoginReq } from "./apis/auth.ts";
 import NProgress from "nprogress";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { type LoginReq, loginApi } from "./apis/auth.ts";
+import { Button } from "./components/Button.tsx";
+import { Input } from "./components/Input.tsx";
 
 export function Login() {
   const [warn, setWarn] = useState("");
@@ -11,13 +11,12 @@ export function Login() {
   const passwordRef = useRef<HTMLInputElement | null>(null);
   const [searchParams] = useSearchParams();
 
-  function onEnter(event: KeyboardEvent) {
-    if (event.key === "Enter") {
-      login();
-    }
-  }
-
   useEffect(() => {
+    function onEnter(event: KeyboardEvent) {
+      if (event.key === "Enter") {
+        login();
+      }
+    }
     window.addEventListener("keydown", onEnter);
     return () => {
       window.removeEventListener("keydown", onEnter);

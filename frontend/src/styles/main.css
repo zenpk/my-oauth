@@ -3,7 +3,12 @@
   padding: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
 }
 
@@ -122,13 +127,15 @@ thead > tr {
   background-color: #efefef;
 }
 
-th, td {
+th,
+td {
   border-right: #cccccc solid 1px;
   border-bottom: #cccccc solid 1px;
   padding: 0.5rem 1rem;
 }
 
-td:last-child, th:last-child {
+td:last-child,
+th:last-child {
   border-right: none;
 }
 

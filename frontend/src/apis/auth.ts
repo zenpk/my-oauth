@@ -1,5 +1,5 @@
-import { Dispatch, SetStateAction } from "react";
-import { axiosPost, CommonResp } from "./basic.ts";
+import type { Dispatch, SetStateAction } from "react";
+import { type CommonResp, axiosPost } from "./basic.ts";
 
 export type LoginReq = {
   username: string;
@@ -15,5 +15,5 @@ export async function loginApi(
   req: LoginReq,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
-  return axiosPost<LoginResp>("/auth/login", req, setWarn);
+  return axiosPost<LoginReq, LoginResp>("/auth/login", req, setWarn);
 }

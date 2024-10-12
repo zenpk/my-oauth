@@ -1,14 +1,20 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
-import { Input } from "./components/Input.tsx";
-import { Button } from "./components/Button.tsx";
 import {
-  Client,
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  type Client,
+  type ClientCreateReq,
+  type ClientDeleteReq,
   clientCreateApi,
-  ClientCreateReq,
   clientDeleteApi,
-  ClientDeleteReq,
   clientListApi,
 } from "./apis/setup.ts";
+import { Button } from "./components/Button.tsx";
+import { Input } from "./components/Input.tsx";
 
 export function Admin() {
   const [adminPassword, setAdminPassword] = useState("");
@@ -19,6 +25,9 @@ export function Admin() {
   const adminPasswordRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    if (triggerRefresh === 0) {
+      return;
+    }
     if (adminPassword !== "" && !showAddForm) {
       clientListApi(setWarn).then((resp) => {
         if (resp) {
@@ -29,7 +38,7 @@ export function Admin() {
   }, [adminPassword, showAddForm, triggerRefresh]);
 
   function saveAdminPassword() {
-    if (adminPasswordRef.current && adminPasswordRef.current.value) {
+    if (adminPasswordRef.current?.value) {
       setAdminPassword(adminPasswordRef.current.value);
     } else {
       setWarn("Save admin password failed");

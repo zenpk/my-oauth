@@ -1,7 +1,11 @@
 import axios from "axios";
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 const BASE = import.meta.env.VITE_BACKEND_URL;
+
+type CanToString = {
+  toString: () => string;
+};
 
 export type CommonResp = {
   ok: boolean;
@@ -17,54 +21,55 @@ export async function axiosGet<T extends CommonResp>(
     if (!data.ok) {
       setWarn(data.msg);
       return null;
-    } else {
-      setWarn("");
-      return data;
     }
-  } catch (err: any) {
-    setWarn(err.toString());
+    setWarn("");
+    return data;
+  } catch (err) {
+    warn(err as CanToString, setWarn);
     return null;
   }
 }
 
-export async function axiosPost<T extends CommonResp>(
+export async function axiosPost<TBody, TRes extends CommonResp>(
   url: string,
-  body: any,
+  body: TBody,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
   try {
     const resp = await axios.post(`${BASE}${url}`, body);
-    const data = resp.data as T;
+    const data = resp.data as TRes;
     if (!data.ok) {
       setWarn(data.msg);
       return null;
-    } else {
-      setWarn("");
-      return data;
     }
-  } catch (err: any) {
-    setWarn(err.toString());
+    setWarn("");
+    return data;
+  } catch (err) {
+    warn(err as CanToString, setWarn);
     return null;
   }
 }
 
-export async function axiosDelete<T extends CommonResp>(
+export async function axiosDelete<TBody, TRes extends CommonResp>(
   url: string,
-  body: any,
+  body: TBody,
   setWarn: Dispatch<SetStateAction<string>>,
 ) {
   try {
     const resp = await axios.delete(`${BASE}${url}`, { data: body });
-    const data = resp.data as T;
+    const data = resp.data as TRes;
     if (!data.ok) {
       setWarn(data.msg);
       return null;
-    } else {
-      setWarn("");
-      return data;
     }
-  } catch (err: any) {
-    setWarn(err.toString());
+    setWarn("");
+    return data;
+  } catch (err) {
+    warn(err as CanToString, setWarn);
     return null;
   }
+}
+
+function warn(err: CanToString, setWarn: Dispatch<SetStateAction<string>>) {
+  setWarn(err.toString());
 }
