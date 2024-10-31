@@ -17,7 +17,7 @@ go build .
 
 ### Front End
 
-Edit the `BASE` constant in `frontend/src/apis/basic.ts` to point to the actual backend service endpoint.
+Edit `.env` to point to the actual backend service endpoint.
 
 ```shell
 npm ci
