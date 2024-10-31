@@ -25,7 +25,7 @@ export function Admin() {
   const adminPasswordRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (triggerRefresh === 0) {
+    if (triggerRefresh < 0) {
       return;
     }
     if (adminPassword !== "" && !showAddForm) {
