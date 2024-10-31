@@ -18,9 +18,8 @@ type Configuration struct {
 	RsaPrivateKeyPath       string `json:"rsaPrivateKeyPath"`
 }
 
-func (c *Configuration) Init(mode string) error {
-	filename := "conf-" + mode + ".json"
-	confJson, err := os.ReadFile("./" + filename)
+func (c *Configuration) Init() error {
+	confJson, err := os.ReadFile("./conf.json")
 	if err != nil {
 		return err
 	}

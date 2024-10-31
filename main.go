@@ -18,8 +18,6 @@ import (
 	"github.com/zenpk/my-oauth/util"
 )
 
-var mode = flag.String("mode", "dev", "define program mode")
-
 func main() {
 	flag.Parse()
 	// graceful exit
@@ -32,7 +30,7 @@ func main() {
 	}()
 
 	conf := new(util.Configuration)
-	if err := conf.Init(*mode); err != nil {
+	if err := conf.Init(); err != nil {
 		panic(err)
 	}
 

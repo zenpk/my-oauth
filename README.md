@@ -8,11 +8,11 @@ Note: This is the side-project of other side-projects.
 
 ### Back End
 
-Edit `conf-prod.json` file to configure the backend-related settings.
+Edit `conf.json` to configure the backend-related settings.
 
 ```shell
 go build .
-./myoauth --mode=prod
+./myoauth
 ```
 
 ### Front End
