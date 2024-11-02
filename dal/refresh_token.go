@@ -21,7 +21,6 @@ type RefreshToken struct {
 	ClientId   int64
 	UserId     int64
 	ExpireTime *time.Time
-	Deleted    bool
 }
 
 func (r RefreshToken) Init() error {
@@ -31,8 +30,7 @@ func (r RefreshToken) Init() error {
 	    token TEXT NOT NULL,
 	    client_id INTEGER NOT NULL,
 	    user_id INTEGER NOT NULL,
-		expire_time INTEGER NOT NULL,
-		deleted INTEGER NOT NULL DEFAULT 0
+		expire_time INTEGER NOT NULL
 	);`); err != nil {
 		return err
 	}
@@ -67,7 +65,7 @@ func (r RefreshToken) Insert(token *RefreshToken) error {
 }
 
 func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, err error) {
-	rows, err := r.db.Query("SELECT * FROM refresh_tokens WHERE (token = ? AND deleted = 0);", token)
+	rows, err := r.db.Query("SELECT * FROM refresh_tokens WHERE token = ?;", token)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +75,7 @@ func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, e
 	refreshToken = new(RefreshToken)
 	if rows.Next() {
 		var unixTime int64
-		if err := rows.Scan(&refreshToken.Id, &refreshToken.Token, &refreshToken.ClientId, &refreshToken.UserId, &unixTime, &refreshToken.Deleted); err != nil {
+		if err := rows.Scan(&refreshToken.Id, &refreshToken.Token, &refreshToken.ClientId, &refreshToken.UserId, &unixTime); err != nil {
 			return nil, err
 		}
 		expireTime := time.Unix(unixTime, 0)
@@ -90,11 +88,11 @@ func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, e
 
 func (r RefreshToken) CleanExpired() error {
 	timeNow := time.Now().Unix()
-	_, err := r.db.Exec("UPDATE refresh_tokens SET deleted = 1 WHERE expire_time < ?;", timeNow)
+	_, err := r.db.Exec("DELETE FROM refresh_tokens WHERE expire_time < ?;", timeNow)
 	return err
 }
 
 func (r RefreshToken) DeleteById(id int64) error {
-	_, err := r.db.Exec("UPDATE refresh_tokens SET deleted = 1 WHERE id = ?;", id)
+	_, err := r.db.Exec("DELETE FROM refresh_tokens WHERE id = ?;", id)
 	return err
 }
