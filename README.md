@@ -2,7 +2,7 @@
 
 Self-hosted OAuth2.0 implementation, with PKCE support.
 
-Note: This is the side-project of other side-projects.
+Note: This is the side-project of other side-projects, coding style is bad.
 
 ## Setup
 
