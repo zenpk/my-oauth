@@ -28,14 +28,14 @@ export function Admin() {
     if (triggerRefresh < 0) {
       return;
     }
-    if (adminPassword !== "" && !showAddForm) {
+    if (adminPassword !== "") {
       clientListApi(setWarn).then((resp) => {
         if (resp) {
           setClients(resp.clients);
         }
       });
     }
-  }, [adminPassword, showAddForm, triggerRefresh]);
+  }, [adminPassword, triggerRefresh]);
 
   function saveAdminPassword() {
     if (adminPasswordRef.current?.value) {
@@ -84,6 +84,7 @@ export function Admin() {
             <AddForm
               setShowAddForm={setShowAddForm}
               setWarn={setWarn}
+              setTriggerRefresh={setTriggerRefresh}
               adminPassword={adminPassword}
             />
           )}
@@ -127,10 +128,12 @@ export function Admin() {
 function AddForm({
   setShowAddForm,
   setWarn,
+  setTriggerRefresh,
   adminPassword,
 }: {
   setShowAddForm: Dispatch<SetStateAction<boolean>>;
   setWarn: Dispatch<SetStateAction<string>>;
+  setTriggerRefresh: Dispatch<SetStateAction<number>>;
   adminPassword: string;
 }) {
   const clientIdRef = useRef<HTMLInputElement | null>(null);
@@ -165,6 +168,7 @@ function AddForm({
         clientCreateApi(client, setWarn).then((resp) => {
           if (resp) {
             setShowAddForm(false);
+            setTriggerRefresh((prev) => prev + 1);
           }
         });
       }
