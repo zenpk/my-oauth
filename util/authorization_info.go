@@ -10,6 +10,7 @@ type AuthorizationInfo struct {
 	ClientId             int64
 	UserId               int64
 	CodeChallenge        string
+	Context              string
 	conf                 *Configuration
 	authorizationCodeMap map[string]*AuthorizationInfo
 }

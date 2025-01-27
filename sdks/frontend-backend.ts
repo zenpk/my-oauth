@@ -9,6 +9,7 @@ export type LoginReq = {
   clientId: string;
   redirect: string;
   codeChallenge: string;
+  context: string;
 };
 
 export type AuthorizeReq = {
@@ -24,6 +25,7 @@ export type CommonResp = {
 export type AuthorizeResp = {
   accessToken: string;
   refreshToken: string;
+  context: string;
 } & CommonResp;
 
 export type RefreshReq = {
@@ -73,8 +75,9 @@ export class MyOAuthSdk {
     const clientId = encodeURIComponent(req.clientId);
     const redirect = encodeURIComponent(req.redirect);
     const codeChallenge = encodeURIComponent(req.codeChallenge);
+    const context = encodeURIComponent(req.context);
     window.location.replace(
-      `${this.oAuthEndpoint}/login?clientId=${clientId}&codeChallenge=${codeChallenge}&redirect=${redirect}`
+      `${this.oAuthEndpoint}/login?clientId=${clientId}&codeChallenge=${codeChallenge}&redirect=${redirect}&context=${context}`
     );
   }
 

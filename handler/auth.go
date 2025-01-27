@@ -19,6 +19,7 @@ type loginReq struct {
 	ClientId      string `json:"clientId"`
 	CodeChallenge string `json:"codeChallenge"`
 	Redirect      string `json:"redirect"`
+	Context       string `json:"context"`
 }
 
 type loginResp struct {
@@ -79,6 +80,7 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		ClientId:      client.Id,
 		UserId:        user.Id,
 		CodeChallenge: req.CodeChallenge,
+		Context:       req.Context,
 	})
 	if err != nil {
 		responseError(w, err)
@@ -104,6 +106,7 @@ type authorizeResp struct {
 	commonResp
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
+	Context      string `json:"context"`
 }
 
 func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
@@ -165,6 +168,7 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 		commonResp:   genOkResponse(),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		Context:      info.Context,
 	})
 }
 

@@ -28,6 +28,7 @@ export function Login() {
     const clientId = searchParams.get("clientId");
     const codeChallenge = searchParams.get("codeChallenge");
     const redirect = searchParams.get("redirect");
+    const context = searchParams.get("context") ?? "";
     if (
       !(
         clientId &&
@@ -48,6 +49,7 @@ export function Login() {
       clientId: decodeURIComponent(clientId),
       codeChallenge: decodeURIComponent(codeChallenge),
       redirect: decodeURIComponent(redirect),
+      context: decodeURIComponent(context),
     };
     loginApi(req, setWarn).then((resp) => {
       NProgress.done();
@@ -55,7 +57,7 @@ export function Login() {
         window.location.replace(
           `${decodeURIComponent(redirect)}?authorizationCode=${
             resp.authorizationCode
-          }`,
+          }`
         );
       }
     });

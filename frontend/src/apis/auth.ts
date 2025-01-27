@@ -7,13 +7,14 @@ export type LoginReq = {
   clientId: string;
   codeChallenge: string;
   redirect: string;
+  context: string;
 };
 
 export type LoginResp = { authorizationCode: string } & CommonResp;
 
 export async function loginApi(
   req: LoginReq,
-  setWarn: Dispatch<SetStateAction<string>>,
+  setWarn: Dispatch<SetStateAction<string>>
 ) {
   return axiosPost<LoginReq, LoginResp>("/auth/login", req, setWarn);
 }
