@@ -1,14 +1,112 @@
 package handler
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/zenpk/my-oauth/dal"
 	"github.com/zenpk/my-oauth/util"
 )
+
+const adminCookieName = "admin_session"
+const adminSessionDuration = 1 * time.Hour
+
+type adminLoginReq struct {
+	AdminPassword string `json:"adminPassword"`
+}
+
+func (h Handler) adminLogin(w http.ResponseWriter, r *http.Request) {
+	var req adminLoginReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		responseInputError(w, err)
+		return
+	}
+	if req.AdminPassword == "" {
+		responseInputError(w)
+		return
+	}
+	passwordMatch, err := util.BCryptHashCheck(h.conf.AdminPassword, req.AdminPassword)
+	if err != nil {
+		responseInternalError(w, h.logger, err)
+		return
+	}
+	if !passwordMatch {
+		responseErrMsg(w, "incorrect admin password")
+		return
+	}
+	expiry := time.Now().Add(adminSessionDuration)
+	token := h.signAdminToken(expiry)
+	http.SetCookie(w, &http.Cookie{
+		Name:     adminCookieName,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   h.conf.SecureCookies,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(adminSessionDuration.Seconds()),
+	})
+	responseOk(w)
+}
+
+func (h Handler) adminLogout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     adminCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+	responseOk(w)
+}
+
+func (h Handler) verifyAdminSession(r *http.Request) bool {
+	cookie, err := r.Cookie(adminCookieName)
+	if err != nil || cookie.Value == "" {
+		return false
+	}
+	return h.verifyAdminToken(cookie.Value)
+}
+
+// signAdminToken creates "expiry_unix|hmac(expiry_unix, adminPasswordHash)"
+func (h Handler) signAdminToken(expiry time.Time) string {
+	payload := fmt.Sprintf("%d", expiry.Unix())
+	mac := hmac.New(sha256.New, []byte(h.conf.AdminPassword))
+	mac.Write([]byte(payload))
+	sig := hex.EncodeToString(mac.Sum(nil))
+	return payload + "|" + sig
+}
+
+func (h Handler) verifyAdminToken(token string) bool {
+	var payload, sig string
+	for i := len(token) - 1; i >= 0; i-- {
+		if token[i] == '|' {
+			payload = token[:i]
+			sig = token[i+1:]
+			break
+		}
+	}
+	if payload == "" || sig == "" {
+		return false
+	}
+	mac := hmac.New(sha256.New, []byte(h.conf.AdminPassword))
+	mac.Write([]byte(payload))
+	expectedSig := hex.EncodeToString(mac.Sum(nil))
+	if !hmac.Equal([]byte(sig), []byte(expectedSig)) {
+		return false
+	}
+	expiryUnix, err := strconv.ParseInt(payload, 10, 64)
+	if err != nil {
+		return false
+	}
+	return time.Now().Unix() < expiryUnix
+}
 
 type registerReq struct {
 	Username       string `json:"username"`
@@ -30,13 +128,17 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	if len(req.Password) < h.conf.PasswordMinLength {
-		responseErrMsg(w, "the password should be at least "+strconv.Itoa(h.conf.PasswordMinLength)+" characters long")
+	if len(req.Username) > 256 {
+		responseErrMsg(w, "username is too long")
+		return
+	}
+	if len(req.Password) < h.conf.PasswordMinLength || len(req.Password) > 72 {
+		responseErrMsg(w, "password must be between "+strconv.Itoa(h.conf.PasswordMinLength)+" and 72 characters")
 		return
 	}
 	checkUser, err := h.db.Users.SelectByName(req.Username)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if checkUser != nil {
@@ -45,7 +147,7 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 	}
 	passwordHash, err := util.BCryptPassword(req.Password)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	user := &dal.User{
@@ -54,7 +156,7 @@ func (h Handler) register(w http.ResponseWriter, r *http.Request) {
 		Password: passwordHash,
 	}
 	if err := h.db.Users.Insert(user); err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	responseOk(w)
@@ -74,9 +176,13 @@ type clientListResp struct {
 }
 
 func (h Handler) clientList(w http.ResponseWriter, r *http.Request) {
+	if !h.verifyAdminSession(r) {
+		responseJson(w, commonResp{Ok: false, Msg: "unauthorized"}, http.StatusUnauthorized)
+		return
+	}
 	clients, err := h.db.Clients.SelectAll()
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	clientsConverted := make([]clientWithoutSecret, 0)
@@ -97,17 +203,28 @@ func (h Handler) clientList(w http.ResponseWriter, r *http.Request) {
 }
 
 type clientCreateReq struct {
-	dal.Client
-	AdminPassword string `json:"adminPassword"`
+	ClientId        string `json:"clientId"`
+	Secret          string `json:"secret"`
+	Redirects       string `json:"redirects"`
+	AccessTokenAge  int64  `json:"accessTokenAge"`
+	RefreshTokenAge int64  `json:"refreshTokenAge"`
 }
 
 func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
+	if !h.verifyAdminSession(r) {
+		responseJson(w, commonResp{Ok: false, Msg: "unauthorized"}, http.StatusUnauthorized)
+		return
+	}
 	var req clientCreateReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
 		return
 	}
-	if req.ClientId == "" || req.Secret == "" || req.Redirects == "" || req.AccessTokenAge <= 0 || req.RefreshTokenAge <= 0 || req.AdminPassword == "" {
+	if req.ClientId == "" || req.Secret == "" || req.Redirects == "" || req.AccessTokenAge <= 0 || req.RefreshTokenAge <= 0 {
+		responseInputError(w)
+		return
+	}
+	if len(req.ClientId) > 256 || len(req.Secret) > 256 || len(req.Redirects) > 2048 {
 		responseInputError(w)
 		return
 	}
@@ -115,18 +232,9 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 		responseErrMsg(w, "refresh token age should be longer than access token age")
 		return
 	}
-	passwordMatch, err := util.BCryptHashCheck(h.conf.AdminPassword, req.AdminPassword)
-	if err != nil {
-		responseError(w, err)
-		return
-	}
-	if !passwordMatch {
-		responseErrMsg(w, "incorrect admin password")
-		return
-	}
 	oldClient, err := h.db.Clients.SelectByClientId(req.ClientId)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if oldClient != nil {
@@ -135,52 +243,53 @@ func (h Handler) clientCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	hashedSecret, err := util.BCryptPassword(req.Secret)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
-	req.Secret = hashedSecret
-	if err := h.db.Clients.Insert(&req.Client); err != nil {
-		responseError(w, err)
+	client := &dal.Client{
+		ClientId:        req.ClientId,
+		Secret:          hashedSecret,
+		Redirects:       req.Redirects,
+		AccessTokenAge:  req.AccessTokenAge,
+		RefreshTokenAge: req.RefreshTokenAge,
+	}
+	if err := h.db.Clients.Insert(client); err != nil {
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	responseOk(w)
 }
 
 type clientDeleteReq struct {
-	Id            int64  `json:"id"`
-	AdminPassword string `json:"adminPassword"`
+	Id int64 `json:"id"`
 }
 
 func (h Handler) clientDelete(w http.ResponseWriter, r *http.Request) {
+	if !h.verifyAdminSession(r) {
+		responseJson(w, commonResp{Ok: false, Msg: "unauthorized"}, http.StatusUnauthorized)
+		return
+	}
 	var req clientDeleteReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		responseInputError(w, err)
 		return
 	}
-	if req.Id <= 0 || req.AdminPassword == "" {
+	if req.Id <= 0 {
 		responseInputError(w)
 		return
 	}
-	passwordMatch, err := util.BCryptHashCheck(h.conf.AdminPassword, req.AdminPassword)
-	if err != nil {
-		responseError(w, err)
-		return
-	}
-	if !passwordMatch {
-		responseErrMsg(w, "incorrect admin password")
-		return
-	}
 	if err := h.db.Clients.DeleteById(req.Id); err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	responseOk(w)
 }
 
 func (h Handler) publicKey(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "public, max-age=86400")
 	jwk, err := h.tk.GetJWK()
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	responseJson(w, jwk)

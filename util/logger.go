@@ -19,7 +19,7 @@ func (l *Logger) Init(conf *Configuration) error {
 	l.Logger = new(log.Logger)
 	logFile, err := os.OpenFile(conf.LogFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
 	if err != nil {
-		return nil
+		return err
 	}
 	l.logFile = logFile
 	l.Logger.SetOutput(logFile)

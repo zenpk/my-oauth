@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -18,7 +19,7 @@ func responseJson(w http.ResponseWriter, data any, statusCodes ...int) {
 	}
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("responseJson encode error: %v\n", err)
 	}
 }
 
@@ -47,15 +48,12 @@ func responseInputError(w http.ResponseWriter, errs ...error) {
 	}, http.StatusBadRequest)
 }
 
-func responseError(w http.ResponseWriter, err error, statusCodes ...int) {
-	code := http.StatusInternalServerError
-	if len(statusCodes) > 0 {
-		code = statusCodes[0]
-	}
+func responseInternalError(w http.ResponseWriter, logger interface{ Println(any ...interface{}) }, err error) {
+	logger.Println("internal error:", err)
 	responseJson(w, commonResp{
 		Ok:  false,
-		Msg: err.Error(),
-	}, code)
+		Msg: "internal error",
+	}, http.StatusInternalServerError)
 }
 
 func genOkResponse() commonResp {

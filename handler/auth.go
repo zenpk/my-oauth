@@ -37,31 +37,35 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
+	if len(req.Username) > 256 || len(req.Password) > 72 || len(req.CodeChallenge) > 512 || len(req.Redirect) > 2048 || len(req.Context) > 2048 {
+		responseInputError(w)
+		return
+	}
 	client, err := h.db.Clients.SelectByClientId(req.ClientId)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if client == nil {
-		responseErrMsg(w, "client id not found")
+		responseErrMsg(w, "invalid credentials")
 		return
 	}
 	user, err := h.db.Users.SelectByName(req.Username)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if user == nil {
-		responseErrMsg(w, "username doesn't exist")
+		responseErrMsg(w, "invalid credentials")
 		return
 	}
 	passwordMatch, err := util.BCryptHashCheck(user.Password, req.Password)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if !passwordMatch {
-		responseErrMsg(w, "incorrect password")
+		responseErrMsg(w, "invalid credentials")
 		return
 	}
 	redirects := strings.Split(client.Redirects, ",")
@@ -83,10 +87,9 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		Context:       req.Context,
 	})
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
-	// ok is ignored because it should always be true
 	sw, _ := w.(*statusResponseWriter)
 	sw.WriteUsername(user.Name)
 	responseJson(sw, loginResp{
@@ -119,14 +122,18 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
+	if len(req.AuthorizationCode) > 512 || len(req.CodeVerifier) > 512 || len(req.ClientSecret) > 256 {
+		responseInputError(w)
+		return
+	}
 	info, err := h.authInfo.VerifyAuthorizationCode(req.AuthorizationCode, req.CodeVerifier)
 	if err != nil {
 		responseErrMsg(w, err.Error())
 		return
 	}
-	client, statusCode, err := h.checkClient(req.ClientId, req.ClientSecret)
+	client, err := h.checkClient(req.ClientId, req.ClientSecret)
 	if err != nil {
-		responseError(w, err, statusCode)
+		responseErrMsg(w, err.Error())
 		return
 	}
 	if info.ClientId != client.Id {
@@ -135,11 +142,11 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := h.db.Users.SelectById(info.UserId)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if user == nil {
-		responseErrMsg(w, "user somehow doesn't exist")
+		responseErrMsg(w, "user not found")
 		return
 	}
 	expireTime := time.Now().Add(time.Duration(client.AccessTokenAge) * time.Hour)
@@ -154,12 +161,12 @@ func (h Handler) authorize(w http.ResponseWriter, r *http.Request) {
 	}
 	accessToken, err := h.tk.GenJwt(claims)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	refreshToken, err := h.sv.GenAndInsertRefreshToken(claims, client, user)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	sw, _ := w.(*statusResponseWriter)
@@ -193,32 +200,40 @@ func (h Handler) refresh(w http.ResponseWriter, r *http.Request) {
 		responseInputError(w)
 		return
 	}
-	client, statusCode, err := h.checkClient(req.ClientId, req.ClientSecret)
-	if err != nil {
-		responseError(w, err, statusCode)
+	if len(req.RefreshToken) > 512 || len(req.ClientSecret) > 256 {
+		responseInputError(w)
 		return
 	}
-	oldRefreshToken, err := h.sv.CleanAndGetRefreshToken(req.RefreshToken)
+	client, err := h.checkClient(req.ClientId, req.ClientSecret)
 	if err != nil {
-		responseError(w, err)
+		responseErrMsg(w, err.Error())
+		return
+	}
+	oldRefreshToken, err := h.db.RefreshTokens.SelectByToken(req.RefreshToken)
+	if err != nil {
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if oldRefreshToken == nil {
 		responseErrMsg(w, "refresh token doesn't exist")
 		return
 	}
+	if oldRefreshToken.ExpireTime != nil && oldRefreshToken.ExpireTime.Before(time.Now()) {
+		_ = h.db.RefreshTokens.DeleteById(oldRefreshToken.Id)
+		responseErrMsg(w, "refresh token expired")
+		return
+	}
 	if oldRefreshToken.ClientId != client.Id {
 		responseErrMsg(w, "client id not match")
 		return
 	}
-	// oldRefreshToken won't be nil here
 	user, err := h.db.Users.SelectById(oldRefreshToken.UserId)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if user == nil {
-		responseErrMsg(w, "user somehow doesn't exist")
+		responseErrMsg(w, "user not found")
 		return
 	}
 	expireTime := time.Now().Add(time.Duration(client.AccessTokenAge) * time.Hour)
@@ -233,7 +248,7 @@ func (h Handler) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 	accessToken, err := h.tk.GenJwt(claims)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	sw, _ := w.(*statusResponseWriter)
@@ -248,6 +263,13 @@ type checkReq struct {
 	AccessToken string `json:"accessToken"`
 }
 
+type verifyResp struct {
+	commonResp
+	Uuid     string `json:"uuid"`
+	Username string `json:"username"`
+	ClientId string `json:"clientId"`
+}
+
 func (h Handler) verify(w http.ResponseWriter, r *http.Request) {
 	var req checkReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -260,32 +282,39 @@ func (h Handler) verify(w http.ResponseWriter, r *http.Request) {
 	}
 	claims, ok, err := h.tk.ParseAndVerifyJwt(req.AccessToken)
 	if err != nil {
-		responseError(w, err)
+		responseInternalError(w, h.logger, err)
 		return
 	}
 	if !ok {
-		responseErrMsg(w, "JWT parse failed")
+		responseErrMsg(w, "invalid token")
 		return
 	}
 	sw, _ := w.(*statusResponseWriter)
 	sw.WriteUsername(claims.Username)
-	responseOk(sw)
+	responseJson(sw, verifyResp{
+		commonResp: genOkResponse(),
+		Uuid:       claims.Uuid,
+		Username:   claims.Username,
+		ClientId:   claims.ClientId,
+	})
 }
 
-func (h Handler) checkClient(clientId, clientSecret string) (*dal.Client, int, error) {
+func (h Handler) checkClient(clientId, clientSecret string) (*dal.Client, error) {
 	client, err := h.db.Clients.SelectByClientId(clientId)
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		h.logger.Println("internal error:", err)
+		return nil, errors.New("internal error")
 	}
 	if client == nil {
-		return nil, http.StatusOK, errors.New("client id doesn't exist")
+		return nil, errors.New("client id doesn't exist")
 	}
 	secretMatch, err := util.BCryptHashCheck(client.Secret, clientSecret)
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		h.logger.Println("internal error:", err)
+		return nil, errors.New("internal error")
 	}
 	if !secretMatch {
-		return nil, http.StatusOK, errors.New("incorrect client secret")
+		return nil, errors.New("incorrect client secret")
 	}
-	return client, http.StatusOK, nil
+	return client, nil
 }

@@ -49,6 +49,11 @@ func main() {
 	if err := db.Init(conf); err != nil {
 		panic(err)
 	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			cleanUpErr = errors.Join(cleanUpErr, err)
+		}
+	}()
 
 	authInfo := new(util.AuthorizationInfo)
 	authInfo.Init(conf)
@@ -58,6 +63,7 @@ func main() {
 	}
 	service := new(service.Service)
 	service.Init(conf, db)
+	service.StartCleanupJob(5 * time.Minute)
 
 	hd := new(handler.Handler)
 	hd.Init(conf, logger, db, service, authInfo, tk)

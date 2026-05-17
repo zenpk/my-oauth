@@ -9,6 +9,8 @@ import {
   type Client,
   type ClientCreateReq,
   type ClientDeleteReq,
+  adminLoginApi,
+  adminLogoutApi,
   clientCreateApi,
   clientDeleteApi,
   clientListApi,
@@ -17,7 +19,7 @@ import { Button } from "./components/Button.tsx";
 import { Input } from "./components/Input.tsx";
 
 export function Admin() {
-  const [adminPassword, setAdminPassword] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
   const [warn, setWarn] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
@@ -28,25 +30,39 @@ export function Admin() {
     if (triggerRefresh < 0) {
       return;
     }
-    if (adminPassword !== "") {
+    if (loggedIn) {
       clientListApi(setWarn).then((resp) => {
         if (resp) {
           setClients(resp.clients);
+        } else {
+          setLoggedIn(false);
         }
       });
     }
-  }, [adminPassword, triggerRefresh]);
+  }, [loggedIn, triggerRefresh]);
 
-  function saveAdminPassword() {
-    if (adminPasswordRef.current?.value) {
-      setAdminPassword(adminPasswordRef.current.value);
-    } else {
-      setWarn("Save admin password failed");
+  function login() {
+    if (!adminPasswordRef.current?.value) {
+      setWarn("Password is required");
+      return;
     }
+    adminLoginApi(adminPasswordRef.current.value, setWarn).then((resp) => {
+      if (resp) {
+        setLoggedIn(true);
+        setWarn("");
+      }
+    });
+  }
+
+  function logout() {
+    adminLogoutApi(setWarn).then(() => {
+      setLoggedIn(false);
+      setClients([]);
+    });
   }
 
   function clientDelete(id: number) {
-    const req: ClientDeleteReq = { id: id, adminPassword: adminPassword };
+    const req: ClientDeleteReq = { id };
     clientDeleteApi(req, setWarn).then((resp) => {
       if (resp !== null) {
         setTriggerRefresh((prev) => prev + 1);
@@ -58,20 +74,23 @@ export function Admin() {
     <div className={"card"}>
       <h1>Admin Page</h1>
       {warn && <span className={"warn"}>{warn}</span>}
-      {!adminPassword && (
+      {!loggedIn && (
         <div>
           <Input
             label={"Admin Password"}
             inputType={"password"}
             myRef={adminPasswordRef}
-            enter={saveAdminPassword}
-            buttonText={"Save"}
+            enter={login}
+            buttonText={"Login"}
           />
         </div>
       )}
-      {adminPassword && (
+      {loggedIn && (
         <div className={"flex-basic-column"}>
-          <h2>Client list</h2>
+          <div className={"flex-basic"}>
+            <h2>Client list</h2>
+            <Button text={"Logout"} click={logout} />
+          </div>
           {!showAddForm && (
             <Button
               text={"Add"}
@@ -85,7 +104,6 @@ export function Admin() {
               setShowAddForm={setShowAddForm}
               setWarn={setWarn}
               setTriggerRefresh={setTriggerRefresh}
-              adminPassword={adminPassword}
             />
           )}
           <table>
@@ -129,12 +147,10 @@ function AddForm({
   setShowAddForm,
   setWarn,
   setTriggerRefresh,
-  adminPassword,
 }: {
   setShowAddForm: Dispatch<SetStateAction<boolean>>;
   setWarn: Dispatch<SetStateAction<string>>;
   setTriggerRefresh: Dispatch<SetStateAction<number>>;
-  adminPassword: string;
 }) {
   const clientIdRef = useRef<HTMLInputElement | null>(null);
   const secretRef = useRef<HTMLInputElement | null>(null);
@@ -163,7 +179,6 @@ function AddForm({
           accessTokenAge: +accessAgeRef.current.value,
           refreshTokenAge: +refreshAgeRef.current.value,
           redirects: redirectRef.current.value,
-          adminPassword: adminPassword,
         };
         clientCreateApi(client, setWarn).then((resp) => {
           if (resp) {

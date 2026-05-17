@@ -4,7 +4,16 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"sync"
+	"time"
 )
+
+const authorizationCodeTTL = 5 * time.Minute
+
+type authCodeEntry struct {
+	info      *AuthorizationInfo
+	expiresAt time.Time
+}
 
 type AuthorizationInfo struct {
 	ClientId             int64
@@ -12,12 +21,14 @@ type AuthorizationInfo struct {
 	CodeChallenge        string
 	Context              string
 	conf                 *Configuration
-	authorizationCodeMap map[string]*AuthorizationInfo
+	mu                   sync.RWMutex
+	authorizationCodeMap map[string]*authCodeEntry
 }
 
 func (a *AuthorizationInfo) Init(conf *Configuration) {
 	a.conf = conf
-	a.authorizationCodeMap = make(map[string]*AuthorizationInfo)
+	a.authorizationCodeMap = make(map[string]*authCodeEntry)
+	go a.cleanupLoop()
 }
 
 func (a *AuthorizationInfo) GenAuthorizationCode(info *AuthorizationInfo) (string, error) {
@@ -25,22 +36,47 @@ func (a *AuthorizationInfo) GenAuthorizationCode(info *AuthorizationInfo) (strin
 	if err != nil {
 		return "", err
 	}
-	a.authorizationCodeMap[code] = info
+	a.mu.Lock()
+	a.authorizationCodeMap[code] = &authCodeEntry{
+		info:      info,
+		expiresAt: time.Now().Add(authorizationCodeTTL),
+	}
+	a.mu.Unlock()
 	return code, nil
 }
 
-// VerifyAuthorizationCode verifier(base64url) -> []byte -> sha256([]byte) -> base64url should == challenge(base64url)
 func (a *AuthorizationInfo) VerifyAuthorizationCode(code string, codeVerifier string) (*AuthorizationInfo, error) {
-	info, ok := a.authorizationCodeMap[code]
+	a.mu.Lock()
+	entry, ok := a.authorizationCodeMap[code]
 	if !ok {
+		a.mu.Unlock()
 		return nil, errors.New("invalid authorization code")
 	}
+	delete(a.authorizationCodeMap, code)
+	a.mu.Unlock()
+
+	if time.Now().After(entry.expiresAt) {
+		return nil, errors.New("authorization code expired")
+	}
 	checksum := sha256.Sum256([]byte(codeVerifier))
-	// use base64.RawURLEncoding to omit padding
-	match := base64.RawURLEncoding.EncodeToString(checksum[:]) == info.CodeChallenge
+	match := base64.RawURLEncoding.EncodeToString(checksum[:]) == entry.info.CodeChallenge
 	if !match {
 		return nil, errors.New("code challenge failed")
 	}
-	delete(a.authorizationCodeMap, code) // one-time usage
-	return info, nil
+	return entry.info, nil
+}
+
+func (a *AuthorizationInfo) cleanupLoop() {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		now := time.Now()
+		a.mu.Lock()
+		for code, entry := range a.authorizationCodeMap {
+			if now.After(entry.expiresAt) {
+				delete(a.authorizationCodeMap, code)
+			}
+		}
+		a.mu.Unlock()
+	}
 }

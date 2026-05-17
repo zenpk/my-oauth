@@ -19,6 +19,13 @@ func (d *Database) Init(conf *util.Configuration) error {
 	if err != nil {
 		return err
 	}
+	sqlite.SetMaxOpenConns(1)
+	if _, err := sqlite.Exec("PRAGMA journal_mode=WAL;"); err != nil {
+		return err
+	}
+	if _, err := sqlite.Exec("PRAGMA foreign_keys=ON;"); err != nil {
+		return err
+	}
 	users := &User{db: sqlite}
 	if err := users.Init(); err != nil {
 		return err

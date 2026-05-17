@@ -12,6 +12,7 @@ type IRefreshToken interface {
 	SelectByToken(token string) (*RefreshToken, error)
 	CleanExpired() error
 	DeleteById(id int64) error
+	DeleteByUserAndClient(userId, clientId int64) error
 }
 
 type RefreshToken struct {
@@ -94,5 +95,10 @@ func (r RefreshToken) CleanExpired() error {
 
 func (r RefreshToken) DeleteById(id int64) error {
 	_, err := r.db.Exec("DELETE FROM refresh_tokens WHERE id = ?;", id)
+	return err
+}
+
+func (r RefreshToken) DeleteByUserAndClient(userId, clientId int64) error {
+	_, err := r.db.Exec("DELETE FROM refresh_tokens WHERE user_id = ? AND client_id = ?;", userId, clientId)
 	return err
 }

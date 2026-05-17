@@ -6,16 +6,18 @@ import (
 )
 
 type Configuration struct {
-	HttpAddress             string `json:"httpAddress"`
-	InvitationCode          string `json:"invitationCode"`
-	AdminPassword           string `json:"adminPassword"`
-	AuthorizationCodeLength int    `json:"authorizationCodeLength"`
-	RefreshTokenLength      int    `json:"refreshTokenLength"`
-	PasswordMinLength       int    `json:"passwordMinLength"`
-	JwtIssuer               string `json:"jwtIssuer"`
-	DbPath                  string `json:"dbPath"`
-	LogFilePath             string `json:"logFilePath"`
-	RsaPrivateKeyPath       string `json:"rsaPrivateKeyPath"`
+	HttpAddress             string   `json:"httpAddress"`
+	AllowedOrigins          []string `json:"allowedOrigins"`
+	SecureCookies           bool     `json:"secureCookies"`
+	InvitationCode          string   `json:"invitationCode"`
+	AdminPassword           string   `json:"adminPassword"`
+	AuthorizationCodeLength int      `json:"authorizationCodeLength"`
+	RefreshTokenLength      int      `json:"refreshTokenLength"`
+	PasswordMinLength       int      `json:"passwordMinLength"`
+	JwtIssuer               string   `json:"jwtIssuer"`
+	DbPath                  string   `json:"dbPath"`
+	LogFilePath             string   `json:"logFilePath"`
+	RsaPrivateKeyPath       string   `json:"rsaPrivateKeyPath"`
 }
 
 func (c *Configuration) Init() error {

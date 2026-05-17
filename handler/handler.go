@@ -35,6 +35,11 @@ func (h *Handler) Init(conf *util.Configuration, logger *util.Logger, db *dal.Da
 
 func (h *Handler) ListenAndServe() error {
 	mux := http.NewServeMux()
+	mux.Handle("/health", h.corsMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		responseOk(w)
+	})))
+	mux.Handle("/setup/admin-login", h.middlewares(http.MethodPost, h.adminLogin))
+	mux.Handle("/setup/admin-logout", h.middlewares(http.MethodPost, h.adminLogout))
 	mux.Handle("/setup/register", h.middlewares(http.MethodPost, h.register))
 	mux.Handle("/setup/client-list", h.middlewares(http.MethodGet, h.clientList))
 	mux.Handle("/setup/client-create", h.middlewares(http.MethodPost, h.clientCreate))
@@ -45,8 +50,12 @@ func (h *Handler) ListenAndServe() error {
 	mux.Handle("/auth/refresh", h.middlewares(http.MethodPost, h.refresh))
 	mux.Handle("/auth/verify", h.middlewares(http.MethodPost, h.verify))
 	h.server = &http.Server{
-		Addr:    h.conf.HttpAddress,
-		Handler: mux,
+		Addr:              h.conf.HttpAddress,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 	h.logger.Printf("start listening at %v\n", h.server.Addr)
 	return h.server.ListenAndServe()
@@ -56,8 +65,26 @@ func (h *Handler) Shutdown(ctx context.Context) error {
 	return h.server.Shutdown(ctx)
 }
 
+const maxBodySize = 1 << 20 // 1 MB
+
 func (h *Handler) middlewares(method string, handler func(w http.ResponseWriter, r *http.Request)) http.Handler {
-	return h.logMiddleware(h.corsMiddleware(h.methodMiddleware(method, http.HandlerFunc(handler))))
+	return h.logMiddleware(h.securityHeadersMiddleware(h.corsMiddleware(h.bodySizeLimitMiddleware(h.methodMiddleware(method, http.HandlerFunc(handler))))))
+}
+
+func (h *Handler) securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (h *Handler) bodySizeLimitMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+		next.ServeHTTP(w, r)
+	})
 }
 
 type statusResponseWriter struct {
@@ -98,13 +125,21 @@ func (h *Handler) logMiddleware(next http.Handler) http.Handler {
 }
 
 func (h *Handler) corsMiddleware(next http.Handler) http.Handler {
+	allowed := make(map[string]bool, len(h.conf.AllowedOrigins))
+	for _, o := range h.conf.AllowedOrigins {
+		allowed[o] = true
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE")
-		w.Header().Add("Access-Control-Allow-Credentials", "true")
-		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		origin := r.Header.Get("Origin")
+		if origin != "" && allowed[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		}
 		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 		next.ServeHTTP(w, r)

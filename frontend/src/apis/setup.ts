@@ -12,13 +12,36 @@ export type Client = {
 
 export type ClientListResp = { clients: Client[] } & CommonResp;
 
-export async function clientListApi(setWarn: Dispatch<SetStateAction<string>>) {
+export async function adminLoginApi(
+  adminPassword: string,
+  setWarn: Dispatch<SetStateAction<string>>,
+) {
+  return axiosPost<{ adminPassword: string }, CommonResp>(
+    "/setup/admin-login",
+    { adminPassword },
+    setWarn,
+  );
+}
+
+export async function adminLogoutApi(
+  setWarn: Dispatch<SetStateAction<string>>,
+) {
+  return axiosPost<object, CommonResp>("/setup/admin-logout", {}, setWarn);
+}
+
+export async function clientListApi(
+  setWarn: Dispatch<SetStateAction<string>>,
+) {
   return axiosGet<ClientListResp>("/setup/client-list", setWarn);
 }
 
 export type ClientCreateReq = {
-  adminPassword: string;
-} & Client;
+  clientId: string;
+  secret: string;
+  redirects: string;
+  accessTokenAge: number;
+  refreshTokenAge: number;
+};
 
 export async function clientCreateApi(
   req: ClientCreateReq,
@@ -33,7 +56,6 @@ export async function clientCreateApi(
 
 export type ClientDeleteReq = {
   id: number;
-  adminPassword: string;
 };
 
 export async function clientDeleteApi(

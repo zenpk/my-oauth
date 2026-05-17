@@ -3,6 +3,8 @@ import type { Dispatch, SetStateAction } from "react";
 
 const BASE = import.meta.env.VITE_BACKEND_URL;
 
+axios.defaults.withCredentials = true;
+
 type CanToString = {
   toString: () => string;
 };
