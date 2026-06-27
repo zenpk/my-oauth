@@ -3,10 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"github.com/zenpk/my-oauth/dal"
-	"github.com/zenpk/my-oauth/util"
 	"net/http"
 	"strings"
+
+	"github.com/zenpk/my-oauth/dal"
+	"github.com/zenpk/my-oauth/util"
 )
 
 type loginReq struct {
@@ -78,7 +79,7 @@ func (h Handler) login(w http.ResponseWriter, r *http.Request) {
 		responseErrMsg(w, "invalid redirect uri")
 		return
 	}
-	authorizationCode, err := h.authInfo.GenAuthorizationCode(util.AuthorizationInfo{
+	authorizationCode, err := h.authCodeStore.Generate(util.AuthorizationInfo{
 		ClientId:      client.Id,
 		UserId:        user.Id,
 		RedirectUri:   req.Redirect,

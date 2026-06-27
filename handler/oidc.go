@@ -181,7 +181,7 @@ func (h Handler) oidcTokenAuthorizationCode(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	info, err := h.authInfo.VerifyAuthorizationCode(code, codeVerifier)
+	info, err := h.authCodeStore.Verify(code, codeVerifier)
 	if err != nil {
 		responseOIDCError(w, http.StatusBadRequest, "invalid_grant", err.Error())
 		return
@@ -300,8 +300,8 @@ func (h Handler) oidcTokenRefresh(w http.ResponseWriter, r *http.Request, client
 }
 
 type oidcUserinfoResp struct {
-	Sub               string `json:"sub"`
-	Name              string `json:"name,omitempty"`
+	Sub  string `json:"sub"`
+	Name string `json:"name,omitempty"`
 }
 
 func (h Handler) oidcUserinfo(w http.ResponseWriter, r *http.Request) {
@@ -335,8 +335,8 @@ func (h Handler) oidcUserinfo(w http.ResponseWriter, r *http.Request) {
 	sw, _ := w.(*statusResponseWriter)
 	sw.WriteUsername(user.Name)
 	responseJson(sw, oidcUserinfoResp{
-		Sub:               user.Uuid,
-		Name:              user.Name,
+		Sub:  user.Uuid,
+		Name: user.Name,
 	})
 }
 

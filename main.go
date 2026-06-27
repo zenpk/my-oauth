@@ -55,8 +55,7 @@ func main() {
 		}
 	}()
 
-	authInfo := new(util.AuthorizationInfo)
-	authInfo.Init(conf)
+	authCodeStore := util.NewAuthorizationCodeStore(conf)
 	tk := new(token.Token)
 	if err := tk.Init(conf, logger); err != nil {
 		panic(err)
@@ -66,7 +65,7 @@ func main() {
 	service.StartCleanupJob(5 * time.Minute)
 
 	hd := new(handler.Handler)
-	hd.Init(conf, logger, db, service, authInfo, tk)
+	hd.Init(conf, logger, db, service, authCodeStore, tk)
 
 	// clean up
 	osSignalChan := make(chan os.Signal, 2)

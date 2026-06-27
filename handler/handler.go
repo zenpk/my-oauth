@@ -13,23 +13,21 @@ import (
 )
 
 type Handler struct {
-	server *http.Server
-	db     *dal.Database
-	conf   *util.Configuration
-	logger util.ILogger
-	// TODO sv       service.IService
-	sv       *service.Service
-	authInfo *util.AuthorizationInfo
-	// TODO tk     token.IToken
-	tk *token.Token
+	server        *http.Server
+	db            *dal.Database
+	conf          *util.Configuration
+	logger        util.ILogger
+	sv            *service.Service
+	authCodeStore *util.AuthorizationCodeStore
+	tk            *token.Token
 }
 
-func (h *Handler) Init(conf *util.Configuration, logger *util.Logger, db *dal.Database, sv *service.Service, authInfo *util.AuthorizationInfo, tk *token.Token) {
+func (h *Handler) Init(conf *util.Configuration, logger *util.Logger, db *dal.Database, sv *service.Service, authCodeStore *util.AuthorizationCodeStore, tk *token.Token) {
 	h.conf = conf
 	h.logger = logger
 	h.db = db
 	h.sv = sv
-	h.authInfo = authInfo
+	h.authCodeStore = authCodeStore
 	h.tk = tk
 }
 

@@ -11,81 +11,103 @@ import (
 const authorizationCodeTTL = 5 * time.Minute
 const authorizationCodeCleanupInterval = 1 * time.Minute
 
+type AuthorizationInfo struct {
+	ClientId      int64
+	UserId        int64
+	RedirectUri   string
+	Scope         string
+	State         string
+	Nonce         string
+	CodeChallenge string
+}
+
 type authCodeEntry struct {
-	info      *AuthorizationInfo
+	info      AuthorizationInfo
 	expiresAt time.Time
 }
 
-type AuthorizationInfo struct {
-	ClientId             int64
-	UserId               int64
-	RedirectUri          string
-	Scope                string
-	State                string
-	Nonce                string
-	CodeChallenge        string
-	conf                 *Configuration
-	mu                   sync.RWMutex
-	authorizationCodeMap map[string]*authCodeEntry
-	lastCleanup          time.Time
+type AuthorizationCodeStore struct {
+	conf *Configuration
+
+	mu          sync.Mutex
+	codes       map[string]authCodeEntry
+	lastCleanup time.Time
 }
 
-func (a *AuthorizationInfo) Init(conf *Configuration) {
-	a.conf = conf
-	a.authorizationCodeMap = make(map[string]*authCodeEntry)
-	a.lastCleanup = time.Now()
+func NewAuthorizationCodeStore(conf *Configuration) *AuthorizationCodeStore {
+	return &AuthorizationCodeStore{
+		conf:        conf,
+		codes:       make(map[string]authCodeEntry),
+		lastCleanup: time.Now(),
+	}
 }
 
-func (a *AuthorizationInfo) GenAuthorizationCode(info *AuthorizationInfo) (string, error) {
+func (a *AuthorizationCodeStore) Generate(info AuthorizationInfo) (string, error) {
 	code, err := RandString(a.conf.AuthorizationCodeLength)
 	if err != nil {
 		return "", err
 	}
+
 	now := time.Now()
+
 	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	a.cleanupExpiredLocked(now)
-	a.authorizationCodeMap[code] = &authCodeEntry{
+
+	a.codes[code] = authCodeEntry{
 		info:      info,
 		expiresAt: now.Add(authorizationCodeTTL),
 	}
-	a.mu.Unlock()
+
 	return code, nil
 }
 
-func (a *AuthorizationInfo) VerifyAuthorizationCode(code string, codeVerifier string) (*AuthorizationInfo, error) {
+func (a *AuthorizationCodeStore) Verify(code, codeVerifier string) (*AuthorizationInfo, error) {
 	if len(codeVerifier) < 43 || len(codeVerifier) > 128 {
 		return nil, errors.New("invalid code verifier")
 	}
+
 	now := time.Now()
+
 	a.mu.Lock()
 	a.cleanupExpiredLocked(now)
-	entry, ok := a.authorizationCodeMap[code]
+
+	entry, ok := a.codes[code]
 	if !ok {
 		a.mu.Unlock()
 		return nil, errors.New("invalid authorization code")
 	}
-	delete(a.authorizationCodeMap, code)
+
+	// Authorization codes are single-use.
+	delete(a.codes, code)
 	a.mu.Unlock()
 
 	if now.After(entry.expiresAt) {
 		return nil, errors.New("authorization code expired")
 	}
+
 	checksum := sha256.Sum256([]byte(codeVerifier))
-	match := base64.RawURLEncoding.EncodeToString(checksum[:]) == entry.info.CodeChallenge
-	if !match {
+	challenge := base64.RawURLEncoding.EncodeToString(checksum[:])
+
+	if challenge != entry.info.CodeChallenge {
 		return nil, errors.New("code challenge failed")
 	}
-	return entry.info, nil
+
+	info := entry.info
+	return &info, nil
 }
 
-func (a *AuthorizationInfo) cleanupExpiredLocked(now time.Time) {
+func (a *AuthorizationCodeStore) cleanupExpiredLocked(now time.Time) {
 	if now.Sub(a.lastCleanup) < authorizationCodeCleanupInterval {
 		return
 	}
-	for code, entry := range a.authorizationCodeMap {
+
+	for code, entry := range a.codes {
 		if now.After(entry.expiresAt) {
-			delete(a.authorizationCodeMap, code)
+			delete(a.codes, code)
 		}
 	}
+
 	a.lastCleanup = now
 }
