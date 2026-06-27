@@ -9,7 +9,6 @@ export default defineConfig(({ mode }) => {
   ).trim();
 
   return {
-    base: "/ui",
     plugins: [react()],
     server: {
       proxy: {

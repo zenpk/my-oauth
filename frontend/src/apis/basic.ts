@@ -1,7 +1,9 @@
 import axios from "axios";
 import type { Dispatch, SetStateAction } from "react";
 
-const BASE = "";
+const BASE = import.meta.env.DEV
+  ? "/api"
+  : (import.meta.env.VITE_API_BASE as string) || "";
 
 axios.defaults.withCredentials = true;
 

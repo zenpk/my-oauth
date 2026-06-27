@@ -9,3 +9,4 @@ myoauth
 private_key
 oauth.private.pem
 oauth.private.public.pem
+.env
