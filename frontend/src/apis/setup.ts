@@ -29,9 +29,7 @@ export async function adminLogoutApi(
   return axiosPost<object, CommonResp>("/setup/admin-logout", {}, setWarn);
 }
 
-export async function clientListApi(
-  setWarn: Dispatch<SetStateAction<string>>,
-) {
+export async function clientListApi(setWarn: Dispatch<SetStateAction<string>>) {
   return axiosGet<ClientListResp>("/setup/client-list", setWarn);
 }
 
