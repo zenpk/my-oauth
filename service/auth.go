@@ -5,11 +5,10 @@ import (
 	"time"
 
 	"github.com/zenpk/my-oauth/dal"
-	"github.com/zenpk/my-oauth/token"
 	"github.com/zenpk/my-oauth/util"
 )
 
-func (s *Service) GenAndInsertRefreshToken(claims *token.Claims, client *dal.Client, user *dal.User) (string, error) {
+func (s *Service) GenAndInsertRefreshToken(client *dal.Client, user *dal.User) (string, error) {
 	// invalidate old refresh tokens for this user+client pair
 	if err := s.db.RefreshTokens.DeleteByUserAndClient(user.Id, client.Id); err != nil {
 		return "", err

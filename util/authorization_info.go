@@ -9,6 +9,7 @@ import (
 )
 
 const authorizationCodeTTL = 5 * time.Minute
+const authorizationCodeCleanupInterval = 1 * time.Minute
 
 type authCodeEntry struct {
 	info      *AuthorizationInfo
@@ -18,17 +19,21 @@ type authCodeEntry struct {
 type AuthorizationInfo struct {
 	ClientId             int64
 	UserId               int64
+	RedirectUri          string
+	Scope                string
+	State                string
+	Nonce                string
 	CodeChallenge        string
-	Context              string
 	conf                 *Configuration
 	mu                   sync.RWMutex
 	authorizationCodeMap map[string]*authCodeEntry
+	lastCleanup          time.Time
 }
 
 func (a *AuthorizationInfo) Init(conf *Configuration) {
 	a.conf = conf
 	a.authorizationCodeMap = make(map[string]*authCodeEntry)
-	go a.cleanupLoop()
+	a.lastCleanup = time.Now()
 }
 
 func (a *AuthorizationInfo) GenAuthorizationCode(info *AuthorizationInfo) (string, error) {
@@ -36,17 +41,24 @@ func (a *AuthorizationInfo) GenAuthorizationCode(info *AuthorizationInfo) (strin
 	if err != nil {
 		return "", err
 	}
+	now := time.Now()
 	a.mu.Lock()
+	a.cleanupExpiredLocked(now)
 	a.authorizationCodeMap[code] = &authCodeEntry{
 		info:      info,
-		expiresAt: time.Now().Add(authorizationCodeTTL),
+		expiresAt: now.Add(authorizationCodeTTL),
 	}
 	a.mu.Unlock()
 	return code, nil
 }
 
 func (a *AuthorizationInfo) VerifyAuthorizationCode(code string, codeVerifier string) (*AuthorizationInfo, error) {
+	if len(codeVerifier) < 43 || len(codeVerifier) > 128 {
+		return nil, errors.New("invalid code verifier")
+	}
+	now := time.Now()
 	a.mu.Lock()
+	a.cleanupExpiredLocked(now)
 	entry, ok := a.authorizationCodeMap[code]
 	if !ok {
 		a.mu.Unlock()
@@ -55,7 +67,7 @@ func (a *AuthorizationInfo) VerifyAuthorizationCode(code string, codeVerifier st
 	delete(a.authorizationCodeMap, code)
 	a.mu.Unlock()
 
-	if time.Now().After(entry.expiresAt) {
+	if now.After(entry.expiresAt) {
 		return nil, errors.New("authorization code expired")
 	}
 	checksum := sha256.Sum256([]byte(codeVerifier))
@@ -66,17 +78,14 @@ func (a *AuthorizationInfo) VerifyAuthorizationCode(code string, codeVerifier st
 	return entry.info, nil
 }
 
-func (a *AuthorizationInfo) cleanupLoop() {
-	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
-	for range ticker.C {
-		now := time.Now()
-		a.mu.Lock()
-		for code, entry := range a.authorizationCodeMap {
-			if now.After(entry.expiresAt) {
-				delete(a.authorizationCodeMap, code)
-			}
-		}
-		a.mu.Unlock()
+func (a *AuthorizationInfo) cleanupExpiredLocked(now time.Time) {
+	if now.Sub(a.lastCleanup) < authorizationCodeCleanupInterval {
+		return
 	}
+	for code, entry := range a.authorizationCodeMap {
+		if now.After(entry.expiresAt) {
+			delete(a.authorizationCodeMap, code)
+		}
+	}
+	a.lastCleanup = now
 }

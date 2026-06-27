@@ -44,11 +44,12 @@ func (h *Handler) ListenAndServe() error {
 	mux.Handle("/setup/client-list", h.middlewares(http.MethodGet, h.clientList))
 	mux.Handle("/setup/client-create", h.middlewares(http.MethodPost, h.clientCreate))
 	mux.Handle("/setup/client-delete", h.middlewares(http.MethodDelete, h.clientDelete))
-	mux.Handle("/setup/public-key", h.middlewares(http.MethodGet, h.publicKey))
+	mux.Handle("/.well-known/openid-configuration", h.middlewares(http.MethodGet, h.oidcDiscovery))
+	mux.Handle("/.well-known/jwks.json", h.middlewares(http.MethodGet, h.oidcJWKS))
+	mux.Handle("/authorize", h.middlewares(http.MethodGet, h.oidcAuthorize))
+	mux.Handle("/token", h.middlewares(http.MethodPost, h.oidcToken))
+	mux.Handle("/userinfo", h.middlewares(http.MethodGet, h.oidcUserinfo))
 	mux.Handle("/auth/login", h.middlewares(http.MethodPost, h.login))
-	mux.Handle("/auth/authorize", h.middlewares(http.MethodPost, h.authorize))
-	mux.Handle("/auth/refresh", h.middlewares(http.MethodPost, h.refresh))
-	mux.Handle("/auth/verify", h.middlewares(http.MethodPost, h.verify))
 	h.server = &http.Server{
 		Addr:              h.conf.HttpAddress,
 		Handler:           mux,

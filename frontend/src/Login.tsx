@@ -25,15 +25,18 @@ export function Login() {
 
   function login() {
     NProgress.start();
-    const clientId = searchParams.get("clientId");
-    const codeChallenge = searchParams.get("codeChallenge");
-    const redirect = searchParams.get("redirect");
-    const context = searchParams.get("context") ?? "";
+    const clientId = searchParams.get("client_id");
+    const codeChallenge = searchParams.get("code_challenge");
+    const redirect = searchParams.get("redirect_uri");
+    const scope = searchParams.get("scope") ?? "";
+    const state = searchParams.get("state") ?? "";
+    const nonce = searchParams.get("nonce") ?? "";
     if (
       !(
         clientId &&
         codeChallenge &&
         redirect &&
+        state &&
         usernameRef.current &&
         usernameRef.current.value &&
         passwordRef.current &&
@@ -46,19 +49,20 @@ export function Login() {
     const req: LoginReq = {
       username: usernameRef.current.value,
       password: passwordRef.current.value,
-      clientId: decodeURIComponent(clientId),
-      codeChallenge: decodeURIComponent(codeChallenge),
-      redirect: decodeURIComponent(redirect),
-      context: decodeURIComponent(context),
+      clientId: clientId,
+      codeChallenge: codeChallenge,
+      redirect: redirect,
+      scope: scope,
+      state: state,
+      nonce: nonce,
     };
     loginApi(req, setWarn).then((resp) => {
       NProgress.done();
       if (resp) {
-        window.location.replace(
-          `${decodeURIComponent(redirect)}?authorizationCode=${
-            resp.authorizationCode
-          }`
-        );
+        const callbackUrl = new URL(redirect);
+        callbackUrl.searchParams.set("code", resp.authorizationCode);
+        callbackUrl.searchParams.set("state", state);
+        window.location.replace(callbackUrl.toString());
       }
     });
   }

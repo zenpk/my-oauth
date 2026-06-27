@@ -7,7 +7,9 @@ export type LoginReq = {
   clientId: string;
   codeChallenge: string;
   redirect: string;
-  context: string;
+  scope?: string;
+  state: string;
+  nonce?: string;
 };
 
 export type LoginResp = { authorizationCode: string } & CommonResp;

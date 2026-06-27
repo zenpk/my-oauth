@@ -2,6 +2,7 @@ package token
 
 import (
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -9,17 +10,21 @@ import (
 	"errors"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/zenpk/my-oauth/util"
 )
 
-type Claims struct {
+type AccessTokenClaims struct {
 	jwt.RegisteredClaims
-	Uuid     string `json:"uuid"`
-	Username string `json:"username"`
-	ClientId string `json:"clientId"`
+}
+
+type IDTokenClaims struct {
+	jwt.RegisteredClaims
+	Nonce string `json:"nonce,omitempty"`
+	Name  string `json:"name,omitempty"`
 }
 
 func (t *Token) Init(conf *util.Configuration, logger *util.Logger) error {
@@ -51,7 +56,7 @@ func (t *Token) Init(conf *util.Configuration, logger *util.Logger) error {
 	return nil
 }
 
-func (t *Token) GenJwt(claims *Claims) (string, error) {
+func (t *Token) GenJwt(claims *AccessTokenClaims) (string, error) {
 	signer, err := jwt.NewSignerRS(jwt.RS256, t.rsaPrivateKey)
 	if err != nil {
 		return "", err
@@ -64,7 +69,20 @@ func (t *Token) GenJwt(claims *Claims) (string, error) {
 	return token.String(), nil
 }
 
-func (t *Token) ParseAndVerifyJwt(token string) (*Claims, bool, error) {
+func (t *Token) GenIDToken(claims *IDTokenClaims) (string, error) {
+	signer, err := jwt.NewSignerRS(jwt.RS256, t.rsaPrivateKey)
+	if err != nil {
+		return "", err
+	}
+	builder := jwt.NewBuilder(signer)
+	token, err := builder.Build(claims)
+	if err != nil {
+		return "", err
+	}
+	return token.String(), nil
+}
+
+func (t *Token) ParseAndVerifyJwt(token string, expectedAudience ...string) (*AccessTokenClaims, bool, error) {
 	verifier, err := jwt.NewVerifierRS(jwt.RS256, &t.rsaPrivateKey.PublicKey)
 	if err != nil {
 		return nil, false, err
@@ -74,28 +92,29 @@ func (t *Token) ParseAndVerifyJwt(token string) (*Claims, bool, error) {
 	if err != nil {
 		return nil, false, err
 	}
-	newClaims := new(Claims)
+	newClaims := new(AccessTokenClaims)
 	if err := json.Unmarshal(parsedToken.Claims(), newClaims); err != nil {
 		return nil, false, err
 	}
-	// don't want to bother implementing it
-	// 	// at least match one audience
-	// 	audiencePass := true
-	// 	if requirement.Audience!=nil{
-	// 	for _, aud := range requirement.Audience {
-	// 		audiencePass = false
-	// 		if newClaims.IsForAudience(aud) {
-	// 			audiencePass = true
-	// 			break
-	// 		}
-	// 	}
-	// }
-	// 	if !audiencePass {
-	// 		t.logger.Println("verify JWT error: audience not matched")
-	// 		return false, nil
-	// 	}
-	if newClaims.Issuer != t.conf.JwtIssuer {
+	expectedIssuer := strings.TrimSuffix(strings.TrimSpace(t.conf.OidcIssuer), "/")
+	if newClaims.Issuer != expectedIssuer {
 		t.logger.Println("verify JWT error: issuer not matched")
+		return nil, false, nil
+	}
+	if len(expectedAudience) > 0 {
+		matched := false
+		for _, aud := range expectedAudience {
+			if aud != "" && newClaims.IsForAudience(aud) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			t.logger.Println("verify JWT error: audience not matched")
+			return nil, false, nil
+		}
+	} else if len(newClaims.Audience) == 0 {
+		t.logger.Println("verify JWT error: audience missing")
 		return nil, false, nil
 	}
 	if !newClaims.IsValidAt(time.Now()) {
@@ -107,6 +126,7 @@ func (t *Token) ParseAndVerifyJwt(token string) (*Claims, bool, error) {
 
 type Jwk struct {
 	Kty string `json:"kty"`
+	Kid string `json:"kid"`
 	E   string `json:"e"`
 	Use string `json:"use"`
 	Alg string `json:"alg"`
@@ -118,8 +138,11 @@ func (t *Token) GetJWK() (*Jwk, error) {
 	// encode modulus and exponent to Base64 URL
 	modulus := t.base64URLEncode(t.rsaPrivateKey.PublicKey.N)
 	exponent := t.base64URLEncode(big.NewInt(int64(t.rsaPrivateKey.PublicKey.E)))
+	sum := sha256.Sum256([]byte(modulus + "." + exponent))
+	kid := base64.RawURLEncoding.EncodeToString(sum[:])
 	return &Jwk{
 		Kty: "RSA",
+		Kid: kid,
 		E:   exponent,
 		Use: "sig",
 		Alg: "RS256",

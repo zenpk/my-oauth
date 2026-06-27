@@ -1,6 +1,6 @@
 # MyOAuth
 
-Self-hosted OAuth2.0 implementation, with PKCE support.
+Self-hosted OAuth2.0/OIDC provider, with PKCE support.
 
 Note: This is the side-project of other side-projects, coding style is bad.
 
@@ -9,6 +9,13 @@ Note: This is the side-project of other side-projects, coding style is bad.
 ### Back End
 
 Edit `conf.json` to configure the backend-related settings.
+
+Generate RSA keys (defaults to `conf.json` `rsaPrivateKeyPath` so it works
+without extra key-path configuration):
+
+```shell
+./gen_rsa.sh
+```
 
 ```shell
 go build .
@@ -28,9 +35,19 @@ npm run build
 
 ![screenshot](./screenshot.png)
 
-## API
+## OIDC Endpoints
 
-Due to being too lazy to write docs, please refer to the `e2e` folder.
+- Discovery: `/.well-known/openid-configuration`
+- JWKS: `/.well-known/jwks.json`
+- Authorization endpoint: `/authorize` (Authorization Code + PKCE S256)
+- Token endpoint: `/token` (`authorization_code` and `refresh_token` grants)
+- UserInfo endpoint: `/userinfo`
+- Login submit endpoint for hosted login page: `/auth/login`
+
+`conf.json` now supports these OIDC-related fields:
+
+- `oidcIssuer`: issuer used in discovery + JWT issuer claim
+- `oidcLoginUrl`: hosted login page URL used by `/authorize`
 
 ## Usage
 

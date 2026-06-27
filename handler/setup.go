@@ -284,13 +284,3 @@ func (h Handler) clientDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	responseOk(w)
 }
-
-func (h Handler) publicKey(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", "public, max-age=86400")
-	jwk, err := h.tk.GetJWK()
-	if err != nil {
-		responseInternalError(w, h.logger, err)
-		return
-	}
-	responseJson(w, jwk)
-}

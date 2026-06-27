@@ -1,7 +1,9 @@
 package dal
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"time"
 )
@@ -61,12 +63,12 @@ func (r RefreshToken) Init() error {
 }
 
 func (r RefreshToken) Insert(token *RefreshToken) error {
-	_, err := r.db.Exec("INSERT INTO refresh_tokens (token, client_id, user_id, expire_time) VALUES (?, ?, ?, ?);", token.Token, token.ClientId, token.UserId, token.ExpireTime.Unix())
+	_, err := r.db.Exec("INSERT INTO refresh_tokens (token, client_id, user_id, expire_time) VALUES (?, ?, ?, ?);", hashToken(token.Token), token.ClientId, token.UserId, token.ExpireTime.Unix())
 	return err
 }
 
 func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, err error) {
-	rows, err := r.db.Query("SELECT * FROM refresh_tokens WHERE token = ?;", token)
+	rows, err := r.db.Query("SELECT * FROM refresh_tokens WHERE token = ?;", hashToken(token))
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +87,11 @@ func (r RefreshToken) SelectByToken(token string) (refreshToken *RefreshToken, e
 		return nil, nil
 	}
 	return refreshToken, err
+}
+
+func hashToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
 }
 
 func (r RefreshToken) CleanExpired() error {
