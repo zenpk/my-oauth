@@ -7,20 +7,23 @@ import { Admin } from "./Admin.tsx";
 import { Login } from "./Login.tsx";
 import { Register } from "./Register.tsx";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Admin />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-]);
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <Admin />,
+    },
+    {
+      path: "/login",
+      element: <Login />,
+    },
+    {
+      path: "/register",
+      element: <Register />,
+    },
+  ],
+  { basename: "/admin" },
+);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

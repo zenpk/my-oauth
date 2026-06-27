@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { Dispatch, SetStateAction } from "react";
 
-const BASE = normalizeBaseUrl("/api");
+const BASE = "";
 
 axios.defaults.withCredentials = true;
 
@@ -74,15 +74,4 @@ export async function axiosDelete<TBody, TRes extends CommonResp>(
 
 function warn(err: CanToString, setWarn: Dispatch<SetStateAction<string>>) {
   setWarn(err.toString());
-}
-
-function normalizeBaseUrl(raw: string | undefined) {
-  const value = (raw || "").trim();
-  if (!value) {
-    return "/api";
-  }
-  if (value === "/") {
-    return "";
-  }
-  return value.replace(/\/+$/, "");
 }
