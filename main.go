@@ -62,7 +62,6 @@ func main() {
 	}
 	service := new(service.Service)
 	service.Init(conf, db)
-	service.StartCleanupJob(5 * time.Minute)
 
 	hd := new(handler.Handler)
 	hd.Init(conf, logger, db, service, authCodeStore, tk)

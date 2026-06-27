@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"time"
 
 	"github.com/zenpk/my-oauth/dal"
@@ -27,16 +26,4 @@ func (s *Service) GenAndInsertRefreshToken(client *dal.Client, user *dal.User) (
 		return "", err
 	}
 	return refreshToken, nil
-}
-
-func (s *Service) StartCleanupJob(interval time.Duration) {
-	go func() {
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
-		for range ticker.C {
-			if err := s.db.RefreshTokens.CleanExpired(); err != nil {
-				log.Printf("cleanup job error: %v\n", err)
-			}
-		}
-	}()
 }
