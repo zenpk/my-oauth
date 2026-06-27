@@ -22,7 +22,7 @@ const router = createBrowserRouter(
       element: <Register />,
     },
   ],
-  { basename: "/admin" },
+  { basename: "/ui" },
 );
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
